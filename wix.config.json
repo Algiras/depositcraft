@@ -1,0 +1,5 @@
+{
+  "$schema": "https://dev.wix.com/wix-cli/schemas/wix-config.json",
+  "appId": "cecd3584-c6bd-4895-a776-613643ef171d",
+  "projectId": "depositcraft"
+}

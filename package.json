@@ -1,0 +1,34 @@
+{
+  "name": "depositcraft",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DepositCraft: Layaway & Partial Deposit Checkout for Wix eCommerce",
+  "dependencies": {
+    "@wix/dashboard": "^1.3.43",
+    "@wix/data": "^1.0.519",
+    "@wix/design-system": "^1.154.0",
+    "@wix/ecom": "^1.0.2498",
+    "@wix/essentials": "^1.0.15",
+    "@wix/wix-ui-icons-common": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^16.0.0",
+    "@types/react-dom": "^16.0.0",
+    "@wix/cli": "^1.0.0",
+    "@wix/cli-app": "^1.0.0",
+    "@wix/sdk-types": "^1.0.0",
+    "react": "16.14.0",
+    "react-dom": "16.14.0",
+    "typescript": "~5.8.2",
+    "vitest": "^4.1.11"
+  },
+  "scripts": {
+    "wix": "wix",
+    "build": "wix app build",
+    "release": "wix app release",
+    "dev": "wix app dev",
+    "preview": "wix app preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}
