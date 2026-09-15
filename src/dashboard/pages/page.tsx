@@ -473,7 +473,7 @@ function DepositCraftDashboard() {
     requestId: storageRequestId
   }) : ''].filter(Boolean).join(' ');
   return <Page height="100vh">
-      <Page.Header title={<FormattedMessage id="app.dashboard.pageTitle" defaultMessage="DepositCraft: Layaway & Deposit Plans" />} subtitle={<FormattedMessage id="app.dashboard.pageSubtitle" defaultMessage="Save deposit plan records, preview schedules, and create order payment requests from Order Details." />} actionsBar={<Box gap="SP2" verticalAlign="middle">
+      <Page.Header title={intl.formatMessage({ id: 'app.dashboard.pageTitle', defaultMessage: 'DepositCraft: Layaway & Deposit Plans' })} subtitle={intl.formatMessage({ id: 'app.dashboard.pageSubtitle', defaultMessage: 'Save deposit plan records, preview schedules, and create order payment requests from Order Details.' })} actionsBar={<Box gap="SP2" verticalAlign="middle">
             {!isPaidPlan && <Tooltip content={!upgradeUrl ? intl.formatMessage({
         id: 'app.dashboard.upgradeTooltipLoading',
         defaultMessage: 'Plan details are still loading'
@@ -490,10 +490,10 @@ function DepositCraftDashboard() {
         {isInitialLoading ? <Card>
             <Card.Content>
               <Box align="center" verticalAlign="middle" padding="60px 0">
-                <Loader text={<FormattedMessage id="app.dashboard.loadingConfig" defaultMessage="Loading your DepositCraft configuration…" />} />
+                <Loader text={intl.formatMessage({ id: 'app.dashboard.loadingConfig', defaultMessage: 'Loading your DepositCraft configuration…' })} />
               </Box>
             </Card.Content>
-          </Card> : ecommerceInstalled === false ? <EmptyState theme="page" title={<FormattedMessage id="app.dashboard.addStoresTitle" defaultMessage="Add Wix Stores to use DepositCraft" />} subtitle={<FormattedMessage id="app.dashboard.addStoresSubtitle" defaultMessage="DepositCraft configures deposit and installment plans for store orders. Add Wix Stores (or another Wix eCommerce app) to this site, then return here to set up your plans." />}>
+          </Card> : ecommerceInstalled === false ? <EmptyState theme="page" title={intl.formatMessage({ id: 'app.dashboard.addStoresTitle', defaultMessage: 'Add Wix Stores to use DepositCraft' })} subtitle={intl.formatMessage({ id: 'app.dashboard.addStoresSubtitle', defaultMessage: 'DepositCraft configures deposit and installment plans for store orders. Add Wix Stores (or another Wix eCommerce app) to this site, then return here to set up your plans.' })}>
             <Button as="a" href={WIX_STORES_APP_MARKET_URL} target="_blank" rel="noopener noreferrer">
               <FormattedMessage id="app.dashboard.addStoresButton" defaultMessage="Add Wix Stores" />
             </Button>
@@ -592,7 +592,7 @@ function DepositCraftDashboard() {
 
             {storageReady && rules.length === 0 ? <Card>
                 <Card.Content>
-                  <EmptyState theme="page" title={<FormattedMessage id="app.dashboard.emptyStateTitle" defaultMessage="Create your first deposit plan record" />} subtitle={<FormattedMessage id="app.dashboard.emptyStateSubtitle" defaultMessage="Define deposit percentage or amount, installment count, and frequency. Pair each active plan with an automatic discount trigger to collect deposits at checkout; balances are collected through payment request links." />}>
+                  <EmptyState theme="page" title={intl.formatMessage({ id: 'app.dashboard.emptyStateTitle', defaultMessage: 'Create your first deposit plan record' })} subtitle={intl.formatMessage({ id: 'app.dashboard.emptyStateSubtitle', defaultMessage: 'Define deposit percentage or amount, installment count, and frequency. Pair each active plan with an automatic discount trigger to collect deposits at checkout; balances are collected through payment request links.' })}>
                     <Button priority="primary" onClick={() => setIsModalOpen(true)}>
                       <FormattedMessage id="app.dashboard.emptyStateButton" defaultMessage="+ Create your first deposit plan" />
                     </Button>
@@ -987,7 +987,7 @@ function DepositCraftDashboard() {
               }} />
                 </SectionHelper>}
 
-              <FormField label={<FormattedMessage id="app.modal.planNameLabel" defaultMessage="Plan name" />} required>
+              <FormField label={intl.formatMessage({ id: 'app.modal.planNameLabel', defaultMessage: 'Plan name' })} required>
                 <Input placeholder={intl.formatMessage({
                 id: 'app.modal.planNamePlaceholder',
                 defaultMessage: 'e.g., Summer bespoke furniture layaway'
@@ -996,7 +996,7 @@ function DepositCraftDashboard() {
 
               <Box gap="SP3">
                 <Box direction="vertical" width="50%">
-                  <FormField label={<FormattedMessage id="app.modal.depositTypeLabel" defaultMessage="Deposit type" />} infoContent={intl.formatMessage({
+                  <FormField label={intl.formatMessage({ id: 'app.modal.depositTypeLabel', defaultMessage: 'Deposit type' })} infoContent={intl.formatMessage({
                   id: 'app.modal.depositTypeInfo',
                   defaultMessage: 'Percentage deposits scale with the order total. Fixed deposits collect the same amount every time.'
                 })}>
@@ -1025,12 +1025,12 @@ function DepositCraftDashboard() {
 
               <Box gap="SP3">
                 <Box direction="vertical" width="50%">
-                  <FormField label={<FormattedMessage id="app.modal.layawayInstallmentsCountLabel" defaultMessage="Layaway installments count" />}>
+                  <FormField label={intl.formatMessage({ id: 'app.modal.layawayInstallmentsCountLabel', defaultMessage: 'Layaway installments count' })}>
                     <NumberInput value={parseInt(newInstallments, 10) || 0} onChange={value => setNewInstallments(String(value ?? 0))} />
                   </FormField>
                 </Box>
                 <Box direction="vertical" width="50%">
-                  <FormField label={<FormattedMessage id="app.modal.installmentFrequencyLabel" defaultMessage="Installment frequency" />} infoContent={!canUseCustomFrequency(entitlement) ? intl.formatMessage({
+                  <FormField label={intl.formatMessage({ id: 'app.modal.installmentFrequencyLabel', defaultMessage: 'Installment frequency' })} infoContent={!canUseCustomFrequency(entitlement) ? intl.formatMessage({
                   id: 'app.modal.installmentFrequencyInfo',
                   defaultMessage: 'Custom frequencies need the Pro plan. Free plans use every 2 weeks.'
                 }) : undefined}>
@@ -1039,13 +1039,11 @@ function DepositCraftDashboard() {
                 </Box>
               </Box>
 
-              <FormField label={<FormattedMessage id="app.modal.minOrderSpendLabel" defaultMessage="Min. order spend threshold ({currency})" values={{
-              currency: CURRENCY
-            }} />}>
+              <FormField label={intl.formatMessage({ id: 'app.modal.minOrderSpendLabel', defaultMessage: 'Min. order spend threshold ({currency})' }, { currency: CURRENCY })}>
                 <NumberInput value={parseFloat(newMinSubtotal) || 0} onChange={value => setNewMinSubtotal(String(value ?? 0))} />
               </FormField>
 
-              <FormField label={<FormattedMessage id="app.modal.appliesToLabel" defaultMessage="Applies to" />}>
+              <FormField label={intl.formatMessage({ id: 'app.modal.appliesToLabel', defaultMessage: 'Applies to' })}>
                 <Dropdown selectedId={newScope} onSelect={option => setNewScope(option.id as DepositRuleScope)} options={[{
                 id: 'ALL_PRODUCTS',
                 value: intl.formatMessage({
@@ -1061,7 +1059,7 @@ function DepositCraftDashboard() {
               }]} />
               </FormField>
 
-              {newScope === 'COLLECTION' && <FormField label={<FormattedMessage id="app.modal.collectionIdsLabel" defaultMessage="Collection IDs (comma-separated)" />} infoContent={intl.formatMessage({
+              {newScope === 'COLLECTION' && <FormField label={intl.formatMessage({ id: 'app.modal.collectionIdsLabel', defaultMessage: 'Collection IDs (comma-separated)' })} infoContent={intl.formatMessage({
               id: 'app.modal.collectionIdsInfo',
               defaultMessage: 'Find collection IDs in Wix Stores > Collections.'
             })}>

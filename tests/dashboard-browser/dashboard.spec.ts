@@ -153,3 +153,20 @@ test('captures a screenshot of the main dashboard for the record', async ({ page
   await expect(page.getByRole('heading', { name: 'DepositCraft: Layaway & Deposit Plans' })).toBeVisible();
   await page.screenshot({ path: 'artifacts/dashboard-main.png', fullPage: true });
 });
+
+test('design system typography is applied to every card and page title', async ({ page }) => {
+  // A Wix Design System string prop (title/subtitle/label) given a React element
+  // renders unstyled, so the browser falls back to a serif face. Catch that here.
+  await page.goto('./');
+  await page.waitForSelector('[data-hook="title"], h1, h2', { timeout: 15000 });
+  const offenders = await page.evaluate(() => {
+    const nodes = Array.from(document.querySelectorAll('[data-hook="title"], [data-hook="subtitle"]'));
+    return nodes
+      .map((el) => ({
+        text: (el.textContent || '').trim().slice(0, 40),
+        font: getComputedStyle(el).fontFamily.split(',')[0].replace(/["']/g, '').trim(),
+      }))
+      .filter((n) => /^(Times|Times New Roman|serif|Georgia)$/i.test(n.font));
+  });
+  expect(offenders).toEqual([]);
+});
