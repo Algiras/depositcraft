@@ -162,5 +162,18 @@
   "app.order.paymentSyncFailedToast": "DepositCraft n’a pas pu actualiser le statut du paiement.",
   "app.order.allCollectedOrOpenToast": "Tous les paiements programmés sont collectés ou ont déjà un lien de paiement ouvert.",
   "app.order.nextLinkCreatedToast": "Prochain lien de paiement créé.",
-  "app.order.paymentAdvanceFailedToast": "DepositCraft n’a pas pu créer le prochain lien de paiement."
+  "app.order.paymentAdvanceFailedToast": "DepositCraft n’a pas pu créer le prochain lien de paiement.",
+  "app.ledger.title": "Registre des paiements",
+  "app.ledger.subtitle": "Échéances enregistrées pour les commandes ayant utilisé un plan d’acompte.",
+  "app.ledger.loadingText": "Chargement du registre des paiements…",
+  "app.ledger.emptyStateTitle": "Aucun paiement enregistré pour le moment",
+  "app.ledger.emptyStateSubtitle": "Les entrées du registre des paiements apparaissent ici une fois qu’un client a terminé un paiement d’acompte.",
+  "app.ledger.orderIdHeader": "N° de commande",
+  "app.ledger.totalHeader": "Total de la commande",
+  "app.ledger.installmentsHeader": "Échéances",
+  "app.ledger.installmentsProgressValue": "{paid} sur {total} payées",
+  "app.ledger.countPartial": "{shown, plural, one {# paiement affiché} other {# paiements affichés}}. D’autres sont disponibles.",
+  "app.ledger.countComplete": "{shown, plural, one {# paiement affiché} other {# paiements affichés}} au total.",
+  "app.ledger.loadMoreButton": "Charger plus",
+  "app.ledger.loadErrorToast": "DepositCraft n’a pas pu charger le registre des paiements."
 }

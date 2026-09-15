@@ -162,5 +162,18 @@
   "app.order.paymentSyncFailedToast": "DepositCraft could not refresh payment status.",
   "app.order.allCollectedOrOpenToast": "All scheduled payments are collected or already have an open payment link.",
   "app.order.nextLinkCreatedToast": "Next payment link created.",
-  "app.order.paymentAdvanceFailedToast": "DepositCraft could not create the next payment link."
+  "app.order.paymentAdvanceFailedToast": "DepositCraft could not create the next payment link.",
+  "app.ledger.title": "Payment ledger",
+  "app.ledger.subtitle": "Installment payments recorded for orders that used a deposit plan.",
+  "app.ledger.loadingText": "Loading payment ledger…",
+  "app.ledger.emptyStateTitle": "No payments recorded yet",
+  "app.ledger.emptyStateSubtitle": "Payment ledger entries appear here after a customer completes a deposit checkout.",
+  "app.ledger.orderIdHeader": "Order ID",
+  "app.ledger.totalHeader": "Order total",
+  "app.ledger.installmentsHeader": "Installments",
+  "app.ledger.installmentsProgressValue": "{paid} of {total} paid",
+  "app.ledger.countPartial": "Showing {shown, plural, one {# payment} other {# payments}}. More are available.",
+  "app.ledger.countComplete": "Showing all {shown, plural, one {# payment} other {# payments}}.",
+  "app.ledger.loadMoreButton": "Load more",
+  "app.ledger.loadErrorToast": "DepositCraft could not load the payment ledger."
 }

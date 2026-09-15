@@ -130,6 +130,59 @@ export async function saveConfiguration<T>(entries: T[]): Promise<void> {
   }
 }
 
+const DEFAULT_PAGE_SIZE = 50;
+const MAX_PAGE_SIZE = 100;
+
+export interface RecordsPage<T> {
+  items: T[];
+  /** Opaque resume token for the next page. Undefined once there is nothing more to load. */
+  nextCursor?: string;
+  hasNext: boolean;
+}
+
+async function fetchRecordsPage(collectionId: string, pageSize: number) {
+  return items.query(collectionId).limit(pageSize).find();
+}
+
+type QueryPageHandle = Awaited<ReturnType<typeof fetchRecordsPage>>;
+
+/**
+ * The installed @wix/data query result (`WixDataResult`) only exposes `hasNext()` /
+ * `next()` on the page it just returned -- there is no standalone cursor token on the
+ * wire to hand back to a future, unrelated call. To resume a follow-up page without
+ * re-draining the collection from the start, we keep the previous page's own result
+ * object in memory here, keyed by an opaque token we mint and return as `nextCursor`.
+ * This is safe for the dashboard's lifetime (one browser tab, one module instance); if
+ * a token is ever unrecognized (e.g. after a reload) we simply restart from page one
+ * rather than throwing.
+ */
+const pageHandles = new Map<string, QueryPageHandle>();
+let cursorSequence = 0;
+
+function clampPageSize(pageSize: number | undefined): number {
+  if (!pageSize || !Number.isFinite(pageSize) || pageSize <= 0) return DEFAULT_PAGE_SIZE;
+  return Math.min(Math.floor(pageSize), MAX_PAGE_SIZE);
+}
+
+/**
+ * Cursor-based page read for an unbounded collection. Never falls back to offset/skip
+ * or total-count paging -- callers get one bounded page plus a token for the next one.
+ */
+export async function listRecordsPage<T>(collectionId: string, opts: { cursor?: string; pageSize?: number } = {}): Promise<RecordsPage<T>> {
+  const pageSize = clampPageSize(opts.pageSize);
+  const handle = opts.cursor ? pageHandles.get(opts.cursor) : undefined;
+  if (opts.cursor) pageHandles.delete(opts.cursor);
+  const result = handle ? await handle.next() : await fetchRecordsPage(collectionId, pageSize);
+  const hasNext = result.hasNext();
+  let nextCursor: string | undefined;
+  if (hasNext) {
+    cursorSequence += 1;
+    nextCursor = `page-${Date.now()}-${cursorSequence}`;
+    pageHandles.set(nextCursor, result);
+  }
+  return { items: result.items as T[], nextCursor, hasNext };
+}
+
 export async function initializeConfiguration(): Promise<void> {
   const start = Date.now();
   try {

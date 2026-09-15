@@ -162,5 +162,18 @@
   "app.order.paymentSyncFailedToast": "DepositCraft no pudo actualizar el estado del pago.",
   "app.order.allCollectedOrOpenToast": "Todos los pagos programados están cobrados o ya tienen un enlace de pago abierto.",
   "app.order.nextLinkCreatedToast": "Se creó el siguiente enlace de pago.",
-  "app.order.paymentAdvanceFailedToast": "DepositCraft no pudo crear el siguiente enlace de pago."
+  "app.order.paymentAdvanceFailedToast": "DepositCraft no pudo crear el siguiente enlace de pago.",
+  "app.ledger.title": "Registro de pagos",
+  "app.ledger.subtitle": "Pagos de cuotas registrados para pedidos que usaron un plan de depósito.",
+  "app.ledger.loadingText": "Cargando el registro de pagos…",
+  "app.ledger.emptyStateTitle": "Aún no se han registrado pagos",
+  "app.ledger.emptyStateSubtitle": "Las entradas del registro de pagos aparecen aquí después de que un cliente complete un pago de depósito.",
+  "app.ledger.orderIdHeader": "ID de pedido",
+  "app.ledger.totalHeader": "Total del pedido",
+  "app.ledger.installmentsHeader": "Cuotas",
+  "app.ledger.installmentsProgressValue": "{paid} de {total} pagadas",
+  "app.ledger.countPartial": "Mostrando {shown, plural, one {# pago} other {# pagos}}. Hay más disponibles.",
+  "app.ledger.countComplete": "Mostrando {shown, plural, one {# pago} other {# pagos}} en total.",
+  "app.ledger.loadMoreButton": "Cargar más",
+  "app.ledger.loadErrorToast": "DepositCraft no pudo cargar el registro de pagos."
 }

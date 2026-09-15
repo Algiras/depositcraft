@@ -162,5 +162,18 @@
   "app.order.paymentSyncFailedToast": "DepositCraft kon de betalingsstatus niet vernieuwen.",
   "app.order.allCollectedOrOpenToast": "Alle geplande betalingen zijn geïnd of hebben al een openstaande betaallink.",
   "app.order.nextLinkCreatedToast": "Volgende betaallink gemaakt.",
-  "app.order.paymentAdvanceFailedToast": "DepositCraft kon de volgende betaallink niet maken."
+  "app.order.paymentAdvanceFailedToast": "DepositCraft kon de volgende betaallink niet maken.",
+  "app.ledger.title": "Betalingsregister",
+  "app.ledger.subtitle": "Termijnbetalingen geregistreerd voor bestellingen met een aanbetalingsplan.",
+  "app.ledger.loadingText": "Betalingsregister wordt geladen…",
+  "app.ledger.emptyStateTitle": "Nog geen betalingen geregistreerd",
+  "app.ledger.emptyStateSubtitle": "Vermeldingen in het betalingsregister verschijnen hier nadat een klant een aanbetaling heeft afgerond.",
+  "app.ledger.orderIdHeader": "Bestel-ID",
+  "app.ledger.totalHeader": "Bestelbedrag",
+  "app.ledger.installmentsHeader": "Termijnen",
+  "app.ledger.installmentsProgressValue": "{paid} van {total} betaald",
+  "app.ledger.countPartial": "{shown, plural, one {# betaling} other {# betalingen}} weergegeven. Er zijn meer beschikbaar.",
+  "app.ledger.countComplete": "Alle {shown, plural, one {# betaling} other {# betalingen}} weergegeven.",
+  "app.ledger.loadMoreButton": "Meer laden",
+  "app.ledger.loadErrorToast": "DepositCraft kon het betalingsregister niet laden."
 }

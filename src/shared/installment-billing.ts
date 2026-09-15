@@ -5,6 +5,7 @@ import {
   type PaymentLedger,
 } from './payment-ledger';
 import { advancePaymentPlanForOrder } from './payment-plan-service';
+import { listRecordsPage, type RecordsPage } from './configuration';
 
 export type BillingRunResult = {
   scanned: number;
@@ -25,6 +26,15 @@ async function defaultQueryLedgers(): Promise<PaymentLedger[]> {
   return result.items
     .map(raw => fromLedgerRecord(raw))
     .filter((ledger): ledger is PaymentLedger => Boolean(ledger));
+}
+
+/** Cursor-paged read over the (unbounded, one-record-per-payment) payment ledger, for the dashboard UI. */
+export async function listPaymentLedgerPage(opts: { cursor?: string; pageSize?: number } = {}): Promise<RecordsPage<PaymentLedger>> {
+  const page = await listRecordsPage<unknown>(PAYMENT_LEDGER_COLLECTION, opts);
+  const ledgers = page.items
+    .map(raw => fromLedgerRecord(raw))
+    .filter((ledger): ledger is PaymentLedger => Boolean(ledger));
+  return { items: ledgers, nextCursor: page.nextCursor, hasNext: page.hasNext };
 }
 
 /** Creates payment links for installments whose due date has passed. Customers still pay manually. */

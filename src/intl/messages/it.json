@@ -162,5 +162,18 @@
   "app.order.paymentSyncFailedToast": "DepositCraft non è riuscito ad aggiornare lo stato del pagamento.",
   "app.order.allCollectedOrOpenToast": "Tutti i pagamenti pianificati sono stati raccolti o hanno già un link di pagamento aperto.",
   "app.order.nextLinkCreatedToast": "Creato il link di pagamento successivo.",
-  "app.order.paymentAdvanceFailedToast": "DepositCraft non è riuscito a creare il link di pagamento successivo."
+  "app.order.paymentAdvanceFailedToast": "DepositCraft non è riuscito a creare il link di pagamento successivo.",
+  "app.ledger.title": "Registro dei pagamenti",
+  "app.ledger.subtitle": "Pagamenti rateali registrati per gli ordini che hanno usato un piano di acconto.",
+  "app.ledger.loadingText": "Caricamento del registro dei pagamenti…",
+  "app.ledger.emptyStateTitle": "Nessun pagamento registrato finora",
+  "app.ledger.emptyStateSubtitle": "Le voci del registro dei pagamenti compaiono qui dopo che un cliente completa un pagamento di acconto.",
+  "app.ledger.orderIdHeader": "ID ordine",
+  "app.ledger.totalHeader": "Totale ordine",
+  "app.ledger.installmentsHeader": "Rate",
+  "app.ledger.installmentsProgressValue": "{paid} su {total} pagate",
+  "app.ledger.countPartial": "{shown, plural, one {# pagamento mostrato} other {# pagamenti mostrati}}. Altri sono disponibili.",
+  "app.ledger.countComplete": "{shown, plural, one {# pagamento mostrato} other {# pagamenti mostrati}} in totale.",
+  "app.ledger.loadMoreButton": "Carica altri",
+  "app.ledger.loadErrorToast": "DepositCraft non è riuscito a caricare il registro dei pagamenti."
 }

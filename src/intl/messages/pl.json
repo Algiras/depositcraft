@@ -162,5 +162,18 @@
   "app.order.paymentSyncFailedToast": "DepositCraft nie mógł odświeżyć statusu płatności.",
   "app.order.allCollectedOrOpenToast": "Wszystkie zaplanowane płatności zostały pobrane lub mają już otwarty link płatności.",
   "app.order.nextLinkCreatedToast": "Utworzono kolejny link płatności.",
-  "app.order.paymentAdvanceFailedToast": "DepositCraft nie mógł utworzyć kolejnego linku płatności."
+  "app.order.paymentAdvanceFailedToast": "DepositCraft nie mógł utworzyć kolejnego linku płatności.",
+  "app.ledger.title": "Rejestr płatności",
+  "app.ledger.subtitle": "Płatności ratalne zarejestrowane dla zamówień korzystających z planu zaliczkowego.",
+  "app.ledger.loadingText": "Wczytywanie rejestru płatności…",
+  "app.ledger.emptyStateTitle": "Brak zarejestrowanych płatności",
+  "app.ledger.emptyStateSubtitle": "Wpisy w rejestrze płatności pojawiają się tutaj po zakończeniu przez klienta płatności zaliczkowej.",
+  "app.ledger.orderIdHeader": "ID zamówienia",
+  "app.ledger.totalHeader": "Suma zamówienia",
+  "app.ledger.installmentsHeader": "Raty",
+  "app.ledger.installmentsProgressValue": "Opłacono {paid} z {total}",
+  "app.ledger.countPartial": "Wyświetlono {shown, plural, one {# płatność} few {# płatności} many {# płatności} other {# płatności}}. Dostępne są kolejne.",
+  "app.ledger.countComplete": "Wyświetlono wszystkie {shown, plural, one {# płatność} few {# płatności} many {# płatności} other {# płatności}}.",
+  "app.ledger.loadMoreButton": "Wczytaj więcej",
+  "app.ledger.loadErrorToast": "DepositCraft nie mógł wczytać rejestru płatności."
 }

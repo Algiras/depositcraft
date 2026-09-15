@@ -6,6 +6,7 @@ function wixServiceMocks(): Plugin {
   const pageImports: Record<string, string> = {
     '../../shared/configuration': 'configuration',
     '../../shared/logger': 'logger',
+    '../../shared/installment-billing': 'installment-billing',
   };
 
   const mocks: Record<string, string> = {
@@ -108,6 +109,34 @@ function wixServiceMocks(): Plugin {
       export const initializeConfiguration = async () => {
         storedRules = [...defaultRules];
       };
+    `,
+    'installment-billing': `
+      // Seed enough ledger records to span 2+ pages of the dashboard's 25-item page size,
+      // so the browser harness can exercise real cursor pagination ("Load more").
+      const LEDGER_PAGE_SIZE = 25;
+      const TOTAL_LEDGER_RECORDS = 30;
+      const seedLedgers = Array.from({ length: TOTAL_LEDGER_RECORDS }, (_, i) => ({
+        _id: 'order-' + String(i + 1).padStart(4, '0'),
+        orderId: 'order-' + String(i + 1).padStart(4, '0'),
+        ruleId: i % 2 === 0 ? 'luxury-furniture-layaway' : 'custom-jewelry-deposit',
+        currency: 'USD',
+        totalOrderAmount: 500 + i * 10,
+        installments: [
+          { installmentNumber: 1, amount: 125 + i, status: 'PAID' },
+          { installmentNumber: 2, amount: 125 + i, status: i % 3 === 0 ? 'PAID' : 'PENDING' },
+        ],
+      }));
+
+      export const listPaymentLedgerPage = async ({ cursor, pageSize } = {}) => {
+        const size = pageSize || LEDGER_PAGE_SIZE;
+        const start = cursor ? parseInt(cursor, 10) : 0;
+        const end = start + size;
+        const items = seedLedgers.slice(start, end);
+        const hasNext = end < seedLedgers.length;
+        return { items, nextCursor: hasNext ? String(end) : undefined, hasNext };
+      };
+
+      export const processDueInstallments = async () => ({ scanned: 0, linksCreated: 0, dueCount: 0 });
     `,
   };
 

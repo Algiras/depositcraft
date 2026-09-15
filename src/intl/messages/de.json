@@ -162,5 +162,18 @@
   "app.order.paymentSyncFailedToast": "DepositCraft konnte den Zahlungsstatus nicht aktualisieren.",
   "app.order.allCollectedOrOpenToast": "Alle geplanten Zahlungen sind erfasst oder haben bereits einen offenen Zahlungslink.",
   "app.order.nextLinkCreatedToast": "Nächster Zahlungslink erstellt.",
-  "app.order.paymentAdvanceFailedToast": "DepositCraft konnte den nächsten Zahlungslink nicht erstellen."
+  "app.order.paymentAdvanceFailedToast": "DepositCraft konnte den nächsten Zahlungslink nicht erstellen.",
+  "app.ledger.title": "Zahlungsjournal",
+  "app.ledger.subtitle": "Ratenzahlungen für Bestellungen, die einen Anzahlungsplan verwendet haben.",
+  "app.ledger.loadingText": "Zahlungsjournal wird geladen…",
+  "app.ledger.emptyStateTitle": "Noch keine Zahlungen erfasst",
+  "app.ledger.emptyStateSubtitle": "Einträge im Zahlungsjournal erscheinen hier, nachdem ein Kunde eine Anzahlung im Checkout abgeschlossen hat.",
+  "app.ledger.orderIdHeader": "Bestell-ID",
+  "app.ledger.totalHeader": "Bestellsumme",
+  "app.ledger.installmentsHeader": "Raten",
+  "app.ledger.installmentsProgressValue": "{paid} von {total} bezahlt",
+  "app.ledger.countPartial": "{shown, plural, one {# Zahlung} other {# Zahlungen}} werden angezeigt. Es sind weitere verfügbar.",
+  "app.ledger.countComplete": "Alle {shown, plural, one {# Zahlung} other {# Zahlungen}} werden angezeigt.",
+  "app.ledger.loadMoreButton": "Mehr laden",
+  "app.ledger.loadErrorToast": "DepositCraft konnte das Zahlungsjournal nicht laden."
 }

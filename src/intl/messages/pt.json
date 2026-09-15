@@ -162,5 +162,18 @@
   "app.order.paymentSyncFailedToast": "O DepositCraft não conseguiu atualizar o estado do pagamento.",
   "app.order.allCollectedOrOpenToast": "Todos os pagamentos agendados foram cobrados ou já têm um link de pagamento aberto.",
   "app.order.nextLinkCreatedToast": "Próximo link de pagamento criado.",
-  "app.order.paymentAdvanceFailedToast": "O DepositCraft não conseguiu criar o próximo link de pagamento."
+  "app.order.paymentAdvanceFailedToast": "O DepositCraft não conseguiu criar o próximo link de pagamento.",
+  "app.ledger.title": "Registo de pagamentos",
+  "app.ledger.subtitle": "Pagamentos de prestações registados para encomendas que utilizaram um plano de depósito.",
+  "app.ledger.loadingText": "A carregar o registo de pagamentos…",
+  "app.ledger.emptyStateTitle": "Ainda não há pagamentos registados",
+  "app.ledger.emptyStateSubtitle": "As entradas do registo de pagamentos aparecem aqui depois de um cliente concluir um pagamento de depósito.",
+  "app.ledger.orderIdHeader": "ID da encomenda",
+  "app.ledger.totalHeader": "Total da encomenda",
+  "app.ledger.installmentsHeader": "Prestações",
+  "app.ledger.installmentsProgressValue": "{paid} de {total} pagas",
+  "app.ledger.countPartial": "A mostrar {shown, plural, one {# pagamento} other {# pagamentos}}. Existem mais disponíveis.",
+  "app.ledger.countComplete": "A mostrar {shown, plural, one {# pagamento} other {# pagamentos}} no total.",
+  "app.ledger.loadMoreButton": "Carregar mais",
+  "app.ledger.loadErrorToast": "O DepositCraft não conseguiu carregar o registo de pagamentos."
 }

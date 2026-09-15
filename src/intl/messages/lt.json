@@ -162,5 +162,18 @@
   "app.order.paymentSyncFailedToast": "DepositCraft nepavyko atnaujinti mokėjimo būsenos.",
   "app.order.allCollectedOrOpenToast": "Visi numatyti mokėjimai surinkti arba jau turi atvirą mokėjimo nuorodą.",
   "app.order.nextLinkCreatedToast": "Sukurta kita mokėjimo nuoroda.",
-  "app.order.paymentAdvanceFailedToast": "DepositCraft nepavyko sukurti kitos mokėjimo nuorodos."
+  "app.order.paymentAdvanceFailedToast": "DepositCraft nepavyko sukurti kitos mokėjimo nuorodos.",
+  "app.ledger.title": "Mokėjimų registras",
+  "app.ledger.subtitle": "įmokos, užregistruotos užsakymams, kuriuose naudotas rankpinigių planas.",
+  "app.ledger.loadingText": "Kraunamas mokėjimų registras…",
+  "app.ledger.emptyStateTitle": "Kol kas mokėjimų neužregistruota",
+  "app.ledger.emptyStateSubtitle": "Mokėjimų registro įrašai čia atsiranda, kai klientas užbaigia rankpinigių mokėjimą.",
+  "app.ledger.orderIdHeader": "Užsakymo ID",
+  "app.ledger.totalHeader": "Užsakymo suma",
+  "app.ledger.installmentsHeader": "įmokos",
+  "app.ledger.installmentsProgressValue": "Apmokėta {paid} iš {total}",
+  "app.ledger.countPartial": "Rodoma {shown, plural, one {# mokėjimas} few {# mokėjimai} many {# mokėjimo} other {# mokėjimų}}. Yra daugiau.",
+  "app.ledger.countComplete": "Rodomi visi {shown, plural, one {# mokėjimas} few {# mokėjimai} many {# mokėjimo} other {# mokėjimų}}.",
+  "app.ledger.loadMoreButton": "Įkelti daugiau",
+  "app.ledger.loadErrorToast": "DepositCraft nepavyko įkelti mokėjimų registro."
 }

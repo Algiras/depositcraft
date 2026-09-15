@@ -16,10 +16,12 @@ import { evaluateDepositPlan } from '../../backend/deposit-engine';
 import { resolveEcommerceInstalled, WIX_STORES_APP_MARKET_URL, type EcommerceInstallState } from '../../shared/ecommerce';
 import { deferredDiscountPercent } from '../../shared/cart-evaluation';
 import { depositTriggerName } from '../../shared/deposit-trigger-id';
-import { processDueInstallments } from '../../shared/installment-billing';
+import { processDueInstallments, listPaymentLedgerPage } from '../../shared/installment-billing';
+import type { PaymentLedger } from '../../shared/payment-ledger';
 const APP_ID = 'cecd3584-c6bd-4895-a776-613643ef171d';
 const SUPPORT_EMAIL = 'kras.algim@gmail.com';
 const CURRENCY = 'USD';
+const LEDGER_PAGE_SIZE = 25;
 
 class ErrorBoundary extends React.Component<{
   children: React.ReactNode;
@@ -170,7 +172,31 @@ function DepositCraftDashboard() {
   });
   const [showUpgradeSuccess, setShowUpgradeSuccess] = useState(false);
   const [isBillingRun, setIsBillingRun] = useState(false);
+  const [ledgerItems, setLedgerItems] = useState<PaymentLedger[]>([]);
+  const [ledgerCursor, setLedgerCursor] = useState<string | undefined>(undefined);
+  const [ledgerHasNext, setLedgerHasNext] = useState(false);
+  const [isLedgerLoading, setIsLedgerLoading] = useState(false);
+  const [isLedgerLoadingMore, setIsLedgerLoadingMore] = useState(false);
   const wasPaidRef = useRef(false);
+  const loadLedgerPage = async (cursor?: string) => {
+    if (cursor) setIsLedgerLoadingMore(true); else setIsLedgerLoading(true);
+    try {
+      const page = await listPaymentLedgerPage({
+        cursor,
+        pageSize: LEDGER_PAGE_SIZE
+      });
+      setLedgerItems(prev => cursor ? [...prev, ...page.items] : page.items);
+      setLedgerCursor(page.nextCursor);
+      setLedgerHasNext(page.hasNext);
+    } catch (error) {
+      showAppToast(intl.formatMessage({
+        id: 'app.ledger.loadErrorToast',
+        defaultMessage: 'DepositCraft could not load the payment ledger.'
+      }), 'error');
+    } finally {
+      if (cursor) setIsLedgerLoadingMore(false); else setIsLedgerLoading(false);
+    }
+  };
   const reloadStorage = async (autoRetry = false) => {
     const start = Date.now();
     setIsCheckingStorage(true);
@@ -195,6 +221,10 @@ function DepositCraftDashboard() {
       setStorageReady(true);
       setStorageState('ready');
       markSetupFinished();
+      setLedgerItems([]);
+      setLedgerCursor(undefined);
+      setLedgerHasNext(false);
+      void loadLedgerPage();
       emitDiagnostic('storage_verify', {
         outcome: 'success',
         durationMs: Date.now() - start,
@@ -722,6 +752,74 @@ function DepositCraftDashboard() {
               }]}>
                         <Table.Content />
                       </Table>
+                    </Card.Content>
+                  </Card>
+
+                  <Card>
+                    <Card.Header title={intl.formatMessage({
+                    id: 'app.ledger.title',
+                    defaultMessage: 'Payment ledger'
+                  })} subtitle={intl.formatMessage({
+                    id: 'app.ledger.subtitle',
+                    defaultMessage: 'Installment payments recorded for orders that used a deposit plan.'
+                  })} />
+                    <Card.Divider />
+                    <Card.Content>
+                      {isLedgerLoading ? <Box align="center" verticalAlign="middle" padding="40px 0">
+                          <Loader size="small" text={intl.formatMessage({
+                        id: 'app.ledger.loadingText',
+                        defaultMessage: 'Loading payment ledger…'
+                      })} />
+                        </Box> : ledgerItems.length === 0 ? <EmptyState theme="section" title={intl.formatMessage({
+                        id: 'app.ledger.emptyStateTitle',
+                        defaultMessage: 'No payments recorded yet'
+                      })} subtitle={intl.formatMessage({
+                        id: 'app.ledger.emptyStateSubtitle',
+                        defaultMessage: 'Payment ledger entries appear here after a customer completes a deposit checkout.'
+                      })} /> : <Box direction="vertical" gap="SP3">
+                          <Table data={ledgerItems} columns={[{
+                        title: intl.formatMessage({
+                          id: 'app.ledger.orderIdHeader',
+                          defaultMessage: 'Order ID'
+                        }),
+                        render: (row: PaymentLedger) => <Text size="small" weight="bold">{row.orderId}</Text>
+                      }, {
+                        title: intl.formatMessage({
+                          id: 'app.ledger.totalHeader',
+                          defaultMessage: 'Order total'
+                        }),
+                        render: (row: PaymentLedger) => <Text size="small">{formatMoney(intl, row.totalOrderAmount)}</Text>
+                      }, {
+                        title: intl.formatMessage({
+                          id: 'app.ledger.installmentsHeader',
+                          defaultMessage: 'Installments'
+                        }),
+                        render: (row: PaymentLedger) => <Text size="small">
+                                        {intl.formatMessage({
+                            id: 'app.ledger.installmentsProgressValue',
+                            defaultMessage: '{paid} of {total} paid'
+                          }, {
+                            paid: row.installments.filter(i => i.status === 'PAID').length,
+                            total: row.installments.length
+                          })}
+                                      </Text>
+                      }]}>
+                            <Table.Content />
+                          </Table>
+
+                          <Box align="space-between" verticalAlign="middle" gap="SP3">
+                            <Text size="tiny" secondary>
+                              {ledgerHasNext ? <FormattedMessage id="app.ledger.countPartial" defaultMessage="Showing {shown, plural, one {# payment} other {# payments}}. More are available." values={{
+                            shown: ledgerItems.length
+                          }} /> : <FormattedMessage id="app.ledger.countComplete" defaultMessage="Showing all {shown, plural, one {# payment} other {# payments}}." values={{
+                            shown: ledgerItems.length
+                          }} />}
+                            </Text>
+                            {ledgerHasNext && <Button priority="secondary" size="small" disabled={isLedgerLoadingMore} onClick={() => void loadLedgerPage(ledgerCursor)}>
+                                <FormattedMessage id="app.ledger.loadMoreButton" defaultMessage="Load more" />
+                              </Button>}
+                          </Box>
+                        </Box>}
                     </Card.Content>
                   </Card>
 
