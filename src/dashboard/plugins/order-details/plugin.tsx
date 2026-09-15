@@ -1,4 +1,4 @@
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl, type IntlShape } from 'react-intl';
 import React, { useEffect, useState } from 'react';
 import type { plugins } from '@wix/ecom/dashboard';
 import { orders } from '@wix/ecom';
@@ -11,11 +11,25 @@ import { getPaymentLedger } from '../../../shared/payment-ledger';
 import { advancePaymentPlanForOrder, startPaymentPlanForOrder, syncPaymentPlanFromWix } from '../../../shared/payment-plan-service';
 import { showAppToast } from '../../../shared/toast';
 import type { DepositRule } from '../../../types';
-function installmentStatusLabel(item: LedgerInstallment): string {
-  if (item.status === 'PAID') return 'Paid';
-  if (item.status === 'CREATING') return 'Creating link…';
-  if (item.paymentRequestUrl) return 'Awaiting payment';
-  return 'Queued';
+import { withIntlProvider } from '../../../intl/withIntlProvider';
+
+function installmentStatusLabel(intl: IntlShape, item: LedgerInstallment): string {
+  if (item.status === 'PAID') return intl.formatMessage({
+    id: 'app.order.statusPaid',
+    defaultMessage: 'Paid'
+  });
+  if (item.status === 'CREATING') return intl.formatMessage({
+    id: 'app.order.statusCreating',
+    defaultMessage: 'Creating link…'
+  });
+  if (item.paymentRequestUrl) return intl.formatMessage({
+    id: 'app.order.statusAwaitingPayment',
+    defaultMessage: 'Awaiting payment'
+  });
+  return intl.formatMessage({
+    id: 'app.order.statusQueued',
+    defaultMessage: 'Queued'
+  });
 }
 function activePaymentUrl(ledger: PaymentLedger | undefined): string {
   const activeRequest = ledger?.installments.find(item => item.paymentRequestUrl && item.status !== 'PAID');
@@ -27,9 +41,10 @@ function canAdvancePlan(ledger: PaymentLedger | undefined): boolean {
   if (hasOpenRequest) return false;
   return ledger.installments.some(item => item.status === 'PENDING' && !item.paymentRequestId);
 }
-export default function DepositCraftOrderDetails({
+function DepositCraftOrderDetails({
   orderId
 }: plugins.OrderDetails.OrderDetailsSecondaryCardProps) {
+  const intl = useIntl();
   const [rules, setRules] = useState<DepositRule[]>([]);
   const [ruleId, setRuleId] = useState<string | undefined>();
   const [summary, setSummary] = useState('');
@@ -54,7 +69,16 @@ export default function DepositCraftOrderDetails({
       setRules(enabled);
       setRuleId(existingLedger?.ruleId ?? enabled[0]?.id);
       const amount = order.priceSummary?.total?.formattedAmount ?? order.priceSummary?.total?.amount;
-      setSummary(amount && order.currency ? `Verified order total: ${amount} ${order.currency}.` : 'This order does not have a payable total yet.');
+      setSummary(amount && order.currency ? intl.formatMessage({
+        id: 'app.order.orderTotalVerified',
+        defaultMessage: 'Verified order total: {amount} {currency}.'
+      }, {
+        amount,
+        currency: order.currency
+      }) : intl.formatMessage({
+        id: 'app.order.orderTotalMissing',
+        defaultMessage: 'This order does not have a payable total yet.'
+      }));
       applyLedger(existingLedger);
       emitDiagnostic('order_load', {
         outcome: 'success',
@@ -63,7 +87,10 @@ export default function DepositCraftOrderDetails({
       });
     }).catch(() => {
       if (active) {
-        setSummary('We could not load this order’s DepositCraft plans right now.');
+        setSummary(intl.formatMessage({
+          id: 'app.order.loadFailed',
+          defaultMessage: 'We could not load this order’s DepositCraft plans right now.'
+        }));
         emitDiagnostic('order_load', {
           outcome: 'failure',
           surface: 'order_slot',
@@ -77,6 +104,7 @@ export default function DepositCraftOrderDetails({
     return () => {
       active = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
   const handleStartPaymentPlan = async () => {
     if (!orderId || !ruleId) return;
@@ -86,15 +114,20 @@ export default function DepositCraftOrderDetails({
       const result = await startPaymentPlanForOrder(orderId, ruleId);
       setPaymentUrl(result.paymentRequestUrl);
       applyLedger(await getPaymentLedger(orderId));
-      showAppToast('Payment request created. Share the link with your customer.', 'success');
+      showAppToast(intl.formatMessage({
+        id: 'app.order.paymentRequestCreatedToast',
+        defaultMessage: 'Payment request created. Share the link with your customer.'
+      }), 'success');
       emitDiagnostic('payment_request_start', {
         outcome: 'success',
         surface: 'order_slot',
         durationMs: Date.now() - start
       });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'DepositCraft could not create a payment request.';
-      showAppToast(message, 'error');
+    } catch {
+      showAppToast(intl.formatMessage({
+        id: 'app.order.paymentRequestFailedToast',
+        defaultMessage: 'DepositCraft could not create a payment request.'
+      }), 'error');
       emitDiagnostic('payment_request_start', {
         outcome: 'failure',
         surface: 'order_slot',
@@ -112,20 +145,31 @@ export default function DepositCraftOrderDetails({
     try {
       const updated = await syncPaymentPlanFromWix(orderId);
       if (!updated) {
-        showAppToast('No DepositCraft payment plan exists for this order yet.', 'error');
+        showAppToast(intl.formatMessage({
+          id: 'app.order.noPaymentPlanToast',
+          defaultMessage: 'No DepositCraft payment plan exists for this order yet.'
+        }), 'error');
         return;
       }
       applyLedger(updated);
       const paidNow = updated.installments.filter(item => item.status === 'PAID').length;
-      showAppToast(`Payment status refreshed (${paidNow} of ${updated.installments.length} collected).`, 'success');
+      showAppToast(intl.formatMessage({
+        id: 'app.order.paymentStatusRefreshedToast',
+        defaultMessage: 'Payment status refreshed ({paidCount} of {totalInstallments} collected).'
+      }, {
+        paidCount: paidNow,
+        totalInstallments: updated.installments.length
+      }), 'success');
       emitDiagnostic('payment_request_sync', {
         outcome: 'success',
         surface: 'order_slot',
         durationMs: Date.now() - start
       });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'DepositCraft could not refresh payment status.';
-      showAppToast(message, 'error');
+    } catch {
+      showAppToast(intl.formatMessage({
+        id: 'app.order.paymentSyncFailedToast',
+        defaultMessage: 'DepositCraft could not refresh payment status.'
+      }), 'error');
       emitDiagnostic('payment_request_sync', {
         outcome: 'failure',
         surface: 'order_slot',
@@ -143,21 +187,29 @@ export default function DepositCraftOrderDetails({
     try {
       const result = await advancePaymentPlanForOrder(orderId);
       if (!result) {
-        showAppToast('All scheduled payments are collected or already have an open payment link.', 'success');
+        showAppToast(intl.formatMessage({
+          id: 'app.order.allCollectedOrOpenToast',
+          defaultMessage: 'All scheduled payments are collected or already have an open payment link.'
+        }), 'success');
         applyLedger(await getPaymentLedger(orderId));
         return;
       }
       setPaymentUrl(result.paymentRequestUrl);
       applyLedger(await getPaymentLedger(orderId));
-      showAppToast('Next payment link created.', 'success');
+      showAppToast(intl.formatMessage({
+        id: 'app.order.nextLinkCreatedToast',
+        defaultMessage: 'Next payment link created.'
+      }), 'success');
       emitDiagnostic('payment_request_advance', {
         outcome: 'success',
         surface: 'order_slot',
         durationMs: Date.now() - start
       });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'DepositCraft could not create the next payment link.';
-      showAppToast(message, 'error');
+    } catch {
+      showAppToast(intl.formatMessage({
+        id: 'app.order.paymentAdvanceFailedToast',
+        defaultMessage: 'DepositCraft could not create the next payment link.'
+      }), 'error');
       emitDiagnostic('payment_request_advance', {
         outcome: 'failure',
         surface: 'order_slot',
@@ -173,7 +225,10 @@ export default function DepositCraftOrderDetails({
   const allPaid = Boolean(ledger && paidCount === totalInstallments && totalInstallments > 0);
   return <WixDesignSystemProvider>
       <Card>
-        <Card.Header title={<FormattedMessage id="depositcraft.depositcraft-payment-plan" defaultMessage="DepositCraft payment plan" />} />
+        <Card.Header title={intl.formatMessage({
+        id: 'app.order.cardTitle',
+        defaultMessage: 'DepositCraft payment plan'
+      })} />
         <Card.Content>
           {isLoading ? <SkeletonGroup skin="light">
               <SkeletonLine width="80%" marginBottom="12px" />
@@ -181,25 +236,36 @@ export default function DepositCraftOrderDetails({
               <SkeletonLine width="60%" />
             </SkeletonGroup> : <Box direction="vertical" gap="SP2">
               <Text>{summary}</Text>
-              {rules.length > 0 ? <Dropdown placeholder="Choose a saved deposit plan" selectedId={ruleId} onSelect={option => setRuleId(String(option.id))} options={rules.map(rule => ({
+              {rules.length > 0 ? <Dropdown placeholder={intl.formatMessage({
+            id: 'app.order.choosePlanPlaceholder',
+            defaultMessage: 'Choose a saved deposit plan'
+          })} selectedId={ruleId} onSelect={option => setRuleId(String(option.id))} options={rules.map(rule => ({
             id: rule.id,
             value: rule.name
-          }))} disabled={Boolean(ledger)} /> : <Text size="small" secondary><FormattedMessage id="depositcraft.no-active-deposit-plans-are-saved-yet-ad" defaultMessage="No active deposit plans are saved yet. Add one from the DepositCraft dashboard page." /></Text>}
+          }))} disabled={Boolean(ledger)} /> : <Text size="small" secondary><FormattedMessage id="app.order.noActivePlans" defaultMessage="No active deposit plans are saved yet. Add one from the DepositCraft dashboard page." /></Text>}
               {ledger && <>
                   <Text size="small" secondary>
-                    {allPaid ? 'All scheduled payments are collected for this order.' : `${paidCount} of ${totalInstallments} scheduled payments collected. DepositCraft creates the next payment link after Wix marks the previous request paid.`}
+                    {allPaid ? <FormattedMessage id="app.order.allPaid" defaultMessage="All scheduled payments are collected for this order." /> : <FormattedMessage id="app.order.partiallyPaid" defaultMessage="{paidCount} of {totalInstallments} scheduled payments collected. DepositCraft creates the next payment link after Wix marks the previous request paid." values={{
+                  paidCount,
+                  totalInstallments
+                }} />}
                   </Text>
                   <Divider />
                   <Box direction="vertical" gap="SP1">
-                    <Text size="small" weight="bold"><FormattedMessage id="depositcraft.installment-schedule" defaultMessage="Installment schedule" /></Text>
+                    <Text size="small" weight="bold"><FormattedMessage id="app.order.installmentScheduleTitle" defaultMessage="Installment schedule" /></Text>
                     {ledger.installments.map(item => <Box key={item.installmentNumber} align="space-between" verticalAlign="middle">
                         <Box direction="vertical">
                           <Text size="small" weight="bold">
-                            {item.installmentNumber === 0 ? 'Deposit' : `Installment ${item.installmentNumber}`}
+                            {item.installmentNumber === 0 ? <FormattedMessage id="app.order.depositLineLabel" defaultMessage="Deposit" /> : <FormattedMessage id="app.order.installmentLineLabel" defaultMessage="Installment {number}" values={{
+                          number: item.installmentNumber
+                        }} />}
                           </Text>
-                          <Text size="tiny" secondary>{installmentStatusLabel(item)}</Text>
+                          <Text size="tiny" secondary>{installmentStatusLabel(intl, item)}</Text>
                         </Box>
-                        <Text size="small" weight="bold">{item.amount.toFixed(2)} {ledger.currency}</Text>
+                        <Text size="small" weight="bold">{intl.formatNumber(item.amount, {
+                      style: 'currency',
+                      currency: ledger.currency
+                    })}</Text>
                       </Box>)}
                   </Box>
                 </>}
@@ -211,24 +277,24 @@ export default function DepositCraftOrderDetails({
               }
               void handleStartPaymentPlan();
             }} disabled={!ruleId || !rules.length || isStarting || allPaid}>
-                  {paymentUrl ? 'Open payment link' : 'Create payment request'}
+                  {paymentUrl ? <FormattedMessage id="app.order.openPaymentLinkButton" defaultMessage="Open payment link" /> : <FormattedMessage id="app.order.createPaymentRequestButton" defaultMessage="Create payment request" />}
                 </Button>
                 {ledger && <>
                     <Button priority="secondary" onClick={() => void handleRefreshStatus()} disabled={isSyncing}>
-                      <FormattedMessage id="depositcraft.refresh-payment-status" defaultMessage="Refresh payment status" />
+                      <FormattedMessage id="app.order.refreshPaymentStatusButton" defaultMessage="Refresh payment status" />
                     </Button>
                     {canAdvancePlan(ledger) && <Button priority="secondary" onClick={() => void handleAdvancePlan()} disabled={isAdvancing}>
-                        <FormattedMessage id="depositcraft.create-next-payment-link" defaultMessage="Create next payment link" />
+                        <FormattedMessage id="app.order.createNextPaymentLinkButton" defaultMessage="Create next payment link" />
                       </Button>}
                   </>}
               </Box>
               {paymentUrl && <Box direction="vertical" gap="SP1">
-                  <Text size="small" weight="bold"><FormattedMessage id="depositcraft.customer-payment-link" defaultMessage="Customer payment link" /></Text>
+                  <Text size="small" weight="bold"><FormattedMessage id="app.order.customerPaymentLinkTitle" defaultMessage="Customer payment link" /></Text>
                   <TextButton as="a" href={paymentUrl} target="_blank" rel="noopener noreferrer">
-                    <FormattedMessage id="depositcraft.open-payment-page" defaultMessage="Open payment page" />
+                    <FormattedMessage id="app.order.openPaymentPageButton" defaultMessage="Open payment page" />
                   </TextButton>
                   <Text size="tiny" secondary>
-                    Your site needs a published Payment Request Page. Customers pay manually through this link. DepositCraft does not auto-charge saved cards or send email on its own — use Automations (Installment due reminder) for scheduled reminders.
+                    <FormattedMessage id="app.order.paymentLinkFootnote" defaultMessage="Your site needs a published Payment Request Page. Customers pay manually through this link. DepositCraft does not auto-charge saved cards or send email on its own — use Automations (Installment due reminder) for scheduled reminders." />
                   </Text>
                 </Box>}
             </Box>}
@@ -236,3 +302,4 @@ export default function DepositCraftOrderDetails({
       </Card>
     </WixDesignSystemProvider>;
 }
+export default withIntlProvider(DepositCraftOrderDetails);

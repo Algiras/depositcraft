@@ -1,7 +1,7 @@
 import { orderPaymentRequests, orders } from '@wix/ecom';
 import { items } from '@wix/data';
 import { evaluateDepositPlan } from '../backend/deposit-engine';
-import { COLLECTION_ID, loadConfiguration } from './configuration';
+import { loadConfiguration } from './configuration';
 import { getAppEntitlement } from './entitlement';
 import { evaluateRuleAgainstPlan } from './plan-limits';
 import {

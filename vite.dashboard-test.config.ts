@@ -25,6 +25,7 @@ function wixServiceMocks(): Plugin {
     logger: `
       export const emitDiagnostic = () => {};
       export const markSetupFinished = () => {};
+      export const markDashboardLoaded = () => {};
       export class AppLogger {
         time(a, fn) { return fn(); }
         info() {}
@@ -33,6 +34,15 @@ function wixServiceMocks(): Plugin {
         trackUsage() {}
       }
       export const logger = new AppLogger('depositcraft');
+    `,
+    essentials: `
+      export const auth = {
+        elevate: (fn) => fn,
+      };
+      export const i18n = {
+        getLanguage: () => new URLSearchParams(window.location.search).get('lang') || 'en',
+        getLocale: () => new URLSearchParams(window.location.search).get('lang') || 'en',
+      };
     `,
     configuration: `
       const defaultRules = [
@@ -106,6 +116,7 @@ function wixServiceMocks(): Plugin {
     enforce: 'pre',
     resolveId(source, importer) {
       if (source === '@wix/app-management') return virtual('app-management');
+      if (source === '@wix/essentials') return virtual('essentials');
       if (!importer?.endsWith('/src/dashboard/pages/page.tsx')) return null;
       const mock = pageImports[source];
       return mock ? virtual(mock) : null;

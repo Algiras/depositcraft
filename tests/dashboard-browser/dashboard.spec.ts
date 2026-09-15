@@ -39,7 +39,7 @@ test('actionable recovery UI renders when storage is provisioning and recovers o
 });
 
 test('interactive simulator updates deposit calculation on cart subtotal change', async ({ page }) => {
-  const subtotalInput = page.getByLabel('Simulated cart subtotal ($)');
+  const subtotalInput = page.getByLabel('Simulated cart subtotal (USD)');
   await subtotalInput.fill('2000.00');
   await expect(page.getByRole('heading', { name: '$500.00' })).toBeVisible();
 });
@@ -60,3 +60,9 @@ for (const width of viewports) {
     await expect(page.getByText('Checkout layaway simulator')).toBeVisible();
   });
 }
+
+test('German locale renders the translated page title', async ({ page }) => {
+  await page.goto('./?lang=de');
+  await expect(page.getByText('Ihre DepositCraft-Konfiguration wird geladen…')).toBeHidden();
+  await expect(page.getByText('DepositCraft: Anzahlungs- & Ratenkaufpläne')).toBeVisible();
+});
