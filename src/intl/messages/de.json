@@ -1,0 +1,16 @@
+{
+  "app.common.save": "Speichern",
+  "app.common.cancel": "Abbrechen",
+  "app.common.retry": "Erneut versuchen",
+  "app.common.delete": "Löschen",
+  "app.common.loading": "Ladevorgang…",
+  "app.common.upgradeToPro": "Auf Pro upgraden",
+  "app.common.storageSetupNeeded": "Speichereinrichtung erforderlich",
+  "app.common.errorTitle": "Etwas ist schiefgelaufen",
+  "app.title": "Anzahlungs- & Ratenkaufpläne",
+  "depositcraft.something-went-wrong-loading-the-dashboa": "Beim Laden des Dashboards ist ein Fehler aufgetreten.",
+  "depositcraft.contact-support": "Support kontaktieren",
+  "depositcraft.upgrade-to-pro": "Auf Pro upgraden",
+  "depositcraft.save-configuration": "Konfiguration speichern",
+  "depositcraft.pro": "Pro"
+}

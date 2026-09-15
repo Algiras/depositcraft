@@ -1,0 +1,16 @@
+{
+  "app.common.save": "Salva",
+  "app.common.cancel": "Annulla",
+  "app.common.retry": "Riprova",
+  "app.common.delete": "Elimina",
+  "app.common.loading": "Caricamento…",
+  "app.common.upgradeToPro": "Passa a Pro",
+  "app.common.storageSetupNeeded": "Configurazione dell'archiviazione necessaria",
+  "app.common.errorTitle": "Qualcosa è andato storto",
+  "app.title": "Piani di acconto e pagamento a rate",
+  "depositcraft.something-went-wrong-loading-the-dashboa": "Si è verificato un errore durante il caricamento della dashboard.",
+  "depositcraft.contact-support": "Contatta l'assistenza",
+  "depositcraft.upgrade-to-pro": "Passa a Pro",
+  "depositcraft.save-configuration": "Salva configurazione",
+  "depositcraft.pro": "Pro"
+}

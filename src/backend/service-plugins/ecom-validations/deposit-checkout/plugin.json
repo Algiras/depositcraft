@@ -1,0 +1,6 @@
+{
+  "$schema": "https://dev.wix.com/wix-cli/schemas/ecom-validations.json",
+  "id": "f8a2c1d0-4e5b-6a7c-8d9e-0f1a2b3c4d5e",
+  "name": "deposit-checkout",
+  "validateInCart": true
+}

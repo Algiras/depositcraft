@@ -1,0 +1,16 @@
+{
+  "app.common.save": "Opslaan",
+  "app.common.cancel": "Annuleren",
+  "app.common.retry": "Opnieuw proberen",
+  "app.common.delete": "Verwijderen",
+  "app.common.loading": "Laden…",
+  "app.common.upgradeToPro": "Upgraden naar Pro",
+  "app.common.storageSetupNeeded": "Opslagconfiguratie nodig",
+  "app.common.errorTitle": "Er ging iets mis",
+  "app.title": "Aanbetaling- & gespreidbetaalplannen",
+  "depositcraft.something-went-wrong-loading-the-dashboa": "Er ging iets mis bij het laden van het dashboard.",
+  "depositcraft.contact-support": "Contact opnemen met ondersteuning",
+  "depositcraft.upgrade-to-pro": "Upgraden naar Pro",
+  "depositcraft.save-configuration": "Configuratie opslaan",
+  "depositcraft.pro": "Pro"
+}

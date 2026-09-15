@@ -1,0 +1,90 @@
+{
+  "triggerKey": "installment_due_reminder",
+  "displayName": "Installment due reminder",
+  "description": "Fires on each scheduled layaway installment due date so you can email the buyer with the payment link.",
+  "payloadSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "required": [
+      "contactId",
+      "orderId",
+      "installmentNumber",
+      "amount",
+      "currency",
+      "dueAt"
+    ],
+    "additionalProperties": true,
+    "properties": {
+      "contactId": {
+        "type": "string",
+        "format": "uuid",
+        "title": "Customer contact",
+        "identityType": "contact",
+        "examples": [
+          "fc81a355-3429-50fc-a4c7-def486e828f3"
+        ]
+      },
+      "orderId": {
+        "type": "string",
+        "format": "uuid",
+        "title": "Order ID",
+        "examples": [
+          "a1b2c3d4-e5f6-4789-a012-3456789abcde"
+        ]
+      },
+      "installmentNumber": {
+        "type": "integer",
+        "title": "Installment number",
+        "examples": [
+          1
+        ]
+      },
+      "amount": {
+        "type": "number",
+        "title": "Amount due",
+        "examples": [
+          75
+        ]
+      },
+      "currency": {
+        "type": "string",
+        "title": "Currency",
+        "examples": [
+          "USD"
+        ]
+      },
+      "dueAt": {
+        "type": "string",
+        "format": "date-time",
+        "title": "Due date",
+        "futureDate": true,
+        "examples": [
+          "2026-10-01T12:00:00.000Z"
+        ]
+      },
+      "paymentRequestUrl": {
+        "type": "string",
+        "title": "Payment link",
+        "examples": [
+          "https://www.example.com/payment-request/example"
+        ]
+      },
+      "planName": {
+        "type": "string",
+        "title": "Plan name",
+        "examples": [
+          "25% layaway"
+        ]
+      }
+    }
+  },
+  "setupNotes": [
+    "URL: https://manage.wix.com/apps/cecd3584-c6bd-4895-a776-613643ef171d/automations-dev-center (NOT /automations).",
+    "Automate: python3 scripts/register_wix_automation_trigger.py --app depositcraft --apply",
+    "Skill: .agents/skills/wix-devcenter-automation-trigger/SKILL.md (workflow: workflows/28-wix-automation-trigger-registration.md).",
+    "Manual: Create Trigger → Generate from Sample Data → Convert to Schema → paste annotated payloadSchema → Process Schema.",
+    "Then connect contactId (Contact ID) and dueAt (scheduled event) in the UI; Save & Close.",
+    "Merchants: Automations → DepositCraft → Installment due reminder → Send an email, timed to dueAt.",
+    "DepositCraft reports/cancels events when installment ledgers change; customers pay manually via payment request links."
+  ]
+}

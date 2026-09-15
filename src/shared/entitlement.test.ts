@@ -1,0 +1,34 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const api = vi.hoisted(() => ({ getAppInstance: vi.fn(), getUrl: vi.fn() }));
+vi.mock('@wix/app-management', () => ({ appInstances: api, billing: api }));
+
+import { canUsePaidFeatures, getAppEntitlement, getWixCheckoutUrl, getWixPricingPageUrl } from './entitlement';
+
+beforeEach(() => vi.resetAllMocks());
+
+describe('Wix Billing entitlement (depositcraft)', () => {
+  it('uses Wix app-instance state rather than a browser flag', async () => {
+    api.getAppInstance.mockResolvedValue({ instance: { isFree: false, billing: { packageName: 'depositcraft-pro' } } });
+    await expect(getAppEntitlement()).resolves.toEqual({ status: 'paid', packageName: 'depositcraft-pro' });
+  });
+
+  it('fails closed when Wix cannot confirm a paid plan', async () => {
+    api.getAppInstance.mockRejectedValue(new Error('unavailable'));
+    expect(canUsePaidFeatures(await getAppEntitlement())).toBe(false);
+  });
+
+  it('requires a configured product ID for Wix-managed checkout', async () => {
+    api.getUrl.mockResolvedValue({ checkoutUrl: 'https://www.wix.com/checkout' });
+    await expect(getWixCheckoutUrl('depositcraft-pro', 'https://www.wix.com/success')).resolves.toContain('/checkout');
+    expect(api.getUrl).toHaveBeenCalledWith('depositcraft-pro', { successUrl: 'https://www.wix.com/success' });
+    await expect(getWixCheckoutUrl('')).rejects.toThrow('product ID');
+  });
+
+  it('builds the Wix-hosted pricing-page URL from the app and site instance', () => {
+    expect(getWixPricingPageUrl('depositcraft-app', 'site-instance')).toBe(
+      'https://www.wix.com/apps/upgrade/depositcraft-app?appInstanceId=site-instance'
+    );
+    expect(getWixPricingPageUrl('depositcraft-app', '')).toBeUndefined();
+  });
+});

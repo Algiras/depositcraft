@@ -1,0 +1,16 @@
+{
+  "app.common.save": "Zapisz",
+  "app.common.cancel": "Anuluj",
+  "app.common.retry": "Ponów",
+  "app.common.delete": "Usuń",
+  "app.common.loading": "Ładowanie…",
+  "app.common.upgradeToPro": "Ulepsz do Pro",
+  "app.common.storageSetupNeeded": "Wymagana konfiguracja pamięci masowej",
+  "app.common.errorTitle": "Coś poszło nie tak",
+  "app.title": "Plany zadatków i płatności ratalnych",
+  "depositcraft.something-went-wrong-loading-the-dashboa": "Wystąpił błąd podczas ładowania panelu.",
+  "depositcraft.contact-support": "Skontaktuj się z pomocą techniczną",
+  "depositcraft.upgrade-to-pro": "Ulepsz do Pro",
+  "depositcraft.save-configuration": "Zapisz konfigurację",
+  "depositcraft.pro": "Pro"
+}

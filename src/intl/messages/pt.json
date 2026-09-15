@@ -1,0 +1,16 @@
+{
+  "app.common.save": "Guardar",
+  "app.common.cancel": "Cancelar",
+  "app.common.retry": "Repetir",
+  "app.common.delete": "Eliminar",
+  "app.common.loading": "A carregar…",
+  "app.common.upgradeToPro": "Atualizar para Pro",
+  "app.common.storageSetupNeeded": "Configuração de armazenamento necessária",
+  "app.common.errorTitle": "Algo correu mal",
+  "app.title": "Planos de sinal e pagamento a prestações",
+  "depositcraft.something-went-wrong-loading-the-dashboa": "Algo correu mal ao carregar o painel.",
+  "depositcraft.contact-support": "Contactar o suporte",
+  "depositcraft.upgrade-to-pro": "Atualizar para Pro",
+  "depositcraft.save-configuration": "Guardar configuração",
+  "depositcraft.pro": "Pro"
+}

@@ -1,0 +1,16 @@
+{
+  "app.common.save": "Įrašyti",
+  "app.common.cancel": "Atšaukti",
+  "app.common.retry": "Pakartoti",
+  "app.common.delete": "Ištrinti",
+  "app.common.loading": "Įkeliama…",
+  "app.common.upgradeToPro": "Atnaujinti iki Pro",
+  "app.common.storageSetupNeeded": "Reikalinga saugyklos sąranka",
+  "app.common.errorTitle": "Įvyko klaida",
+  "app.title": "Avanso ir įmokų planai",
+  "depositcraft.something-went-wrong-loading-the-dashboa": "Įvyko klaida įkeliant valdymo skydą.",
+  "depositcraft.contact-support": "Susisiekti su palaikymo komanda",
+  "depositcraft.upgrade-to-pro": "Atnaujinti iki Pro",
+  "depositcraft.save-configuration": "Įrašyti konfigūraciją",
+  "depositcraft.pro": "Pro"
+}

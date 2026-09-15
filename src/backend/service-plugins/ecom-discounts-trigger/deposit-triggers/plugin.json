@@ -1,0 +1,5 @@
+{
+  "$schema": "https://dev.wix.com/wix-cli/schemas/ecom-discounts-trigger.json",
+  "id": "a3b4c5d6-e7f8-9012-3456-7890abcdef12",
+  "name": "deposit-triggers"
+}

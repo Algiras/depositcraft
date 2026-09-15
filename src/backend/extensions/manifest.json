@@ -1,0 +1,125 @@
+{
+  "namespace": "@krasalgim/depositcraft",
+  "dataCollections": {
+    "componentName": "DepositCraft private plans and ledger",
+    "collections": [
+      {
+        "idSuffix": "depositcraft-plans",
+        "displayName": "DepositCraftPlans",
+        "displayField": "title",
+        "fields": [
+          {
+            "key": "title",
+            "displayName": "Title",
+            "type": "TEXT"
+          },
+          {
+            "key": "payload",
+            "displayName": "Payload",
+            "type": "OBJECT",
+            "objectOptions": {
+              "fields": []
+            }
+          }
+        ],
+        "dataPermissions": {
+          "itemRead": "PRIVILEGED",
+          "itemInsert": "PRIVILEGED",
+          "itemUpdate": "PRIVILEGED",
+          "itemRemove": "PRIVILEGED"
+        },
+        "indexes": [],
+        "initialData": []
+      },
+      {
+        "idSuffix": "depositcraft-payment-ledger",
+        "displayName": "DepositCraftPaymentLedger",
+        "displayField": "title",
+        "fields": [
+          {
+            "key": "title",
+            "displayName": "Title",
+            "type": "TEXT"
+          },
+          {
+            "key": "payload",
+            "displayName": "Payload",
+            "type": "OBJECT",
+            "objectOptions": {
+              "fields": []
+            }
+          }
+        ],
+        "dataPermissions": {
+          "itemRead": "PRIVILEGED",
+          "itemInsert": "PRIVILEGED",
+          "itemUpdate": "PRIVILEGED",
+          "itemRemove": "PRIVILEGED"
+        },
+        "indexes": [],
+        "initialData": []
+      }
+    ]
+  },
+  "appTools": {
+    "componentName": "DepositCraft assistant tools",
+    "id": "bdb3fec6-175b-49ca-b49f-e473a2130d21",
+    "name": "depositcraft-tools",
+    "tools": [
+      {
+        "methodName": "get-entitlement",
+        "description": "Returns the current DepositCraft plan entitlement for this site instance, including whether Pro features are active.",
+        "requestSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "responseSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string"
+            },
+            "isPaid": {
+              "type": "boolean"
+            }
+          }
+        },
+        "activated": true
+      },
+      {
+        "methodName": "verify-storage",
+        "description": "Checks whether DepositCraft private Wix Data storage is provisioned on this site.",
+        "requestSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "responseSchema": {
+          "type": "object",
+          "properties": {
+            "ready": {
+              "type": "boolean"
+            }
+          }
+        },
+        "activated": true
+      },
+      {
+        "methodName": "describe-config",
+        "description": "Summarizes how many DepositCraft configuration records exist in private storage.",
+        "requestSchema": {
+          "type": "object",
+          "properties": {}
+        },
+        "responseSchema": {
+          "type": "object",
+          "properties": {
+            "count": {
+              "type": "number"
+            }
+          }
+        },
+        "activated": true
+      }
+    ]
+  }
+}

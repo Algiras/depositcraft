@@ -1,0 +1,16 @@
+{
+  "app.common.save": "Guardar",
+  "app.common.cancel": "Cancelar",
+  "app.common.retry": "Reintentar",
+  "app.common.delete": "Eliminar",
+  "app.common.loading": "Cargando…",
+  "app.common.upgradeToPro": "Actualizar a Pro",
+  "app.common.storageSetupNeeded": "Configuración de almacenamiento necesaria",
+  "app.common.errorTitle": "Algo salió mal",
+  "app.title": "Planes de depósito y pago a plazos",
+  "depositcraft.something-went-wrong-loading-the-dashboa": "Algo salió mal al cargar el panel.",
+  "depositcraft.contact-support": "Contactar con soporte",
+  "depositcraft.upgrade-to-pro": "Actualizar a Pro",
+  "depositcraft.save-configuration": "Guardar configuración",
+  "depositcraft.pro": "Pro"
+}

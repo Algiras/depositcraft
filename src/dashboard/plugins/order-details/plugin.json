@@ -1,0 +1,6 @@
+{
+  "$schema": "https://dev.wix.com/wix-cli/schemas/dashboard-plugin.json",
+  "id": "80dbfac7-c197-4e9e-9c36-7e7b23fe3456",
+  "title": "DepositCraft payment plan",
+  "extends": "cb16162e-42aa-41bd-a644-dc570328c6cc"
+}

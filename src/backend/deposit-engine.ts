@@ -145,7 +145,6 @@ export function buildLayawaySchedule(
 
     accumulated += amount;
 
-    const intervalUnit = frequency === 'WEEKLY' ? 'week' : frequency === 'BIWEEKLY' ? '2 weeks' : 'month';
     const dueDescription = `In ${i * (frequency === 'WEEKLY' ? 1 : frequency === 'BIWEEKLY' ? 2 : 4)} weeks`;
 
     schedule.push({

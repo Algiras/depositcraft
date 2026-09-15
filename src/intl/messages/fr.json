@@ -1,0 +1,16 @@
+{
+  "app.common.save": "Enregistrer",
+  "app.common.cancel": "Annuler",
+  "app.common.retry": "Réessayer",
+  "app.common.delete": "Supprimer",
+  "app.common.loading": "Chargement…",
+  "app.common.upgradeToPro": "Passer à Pro",
+  "app.common.storageSetupNeeded": "Configuration du stockage requise",
+  "app.common.errorTitle": "Une erreur est survenue",
+  "app.title": "Plans d'acompte et de paiement échelonné",
+  "depositcraft.something-went-wrong-loading-the-dashboa": "Une erreur est survenue lors du chargement du tableau de bord.",
+  "depositcraft.contact-support": "Contacter l'assistance",
+  "depositcraft.upgrade-to-pro": "Passer à Pro",
+  "depositcraft.save-configuration": "Enregistrer la configuration",
+  "depositcraft.pro": "Pro"
+}
