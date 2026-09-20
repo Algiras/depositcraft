@@ -1,5 +1,5 @@
 import { appInstances } from '@wix/app-management';
-import { emitDiagnostic } from '../../../shared/logger';
+import { createLifecycleEventHandlers } from '@wix-extensions/core/telemetry';
 
 /**
  * Install lifecycle telemetry: records when a site adds the app so adoption
@@ -10,10 +10,7 @@ import { emitDiagnostic } from '../../../shared/logger';
  * against a short wall-clock budget, and installs started returning
  * 500/time-out. Event handlers must return immediately; storage verification
  * stays dashboard-side (first-load auto-retry + provisioning loader poll).
+ * `createLifecycleEventHandlers` is called with no hooks so this keeps
+ * returning immediately after emitting telemetry.
  */
-export default appInstances.onAppInstanceInstalled(async () => {
-  emitDiagnostic('app_installed', {
-    outcome: 'success',
-    surface: 'backend_event',
-  });
-});
+export default appInstances.onAppInstanceInstalled(createLifecycleEventHandlers('depositcraft').onAppInstalled);

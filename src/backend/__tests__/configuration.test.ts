@@ -65,13 +65,12 @@ it('reports provisioning when the collection is missing', async () => {
   await expect(initializeConfiguration()).rejects.toThrow('DepositCraft is still provisioning private storage');
 });
 
-it('reports provisioning when private storage returns 403 before collections exist', async () => {
+it('reports a distinct permission_denied state when private storage returns 403', async () => {
   vi.mocked(collections.getDataCollection).mockRejectedValue(new Error('403 Forbidden'));
   const readiness = await assessConfigurationStorage();
   expect(readiness.ready).toBe(false);
-  expect(readiness.state).toBe('provisioning');
-  expect(readiness.message).toContain('still provisioning private storage');
-  expect(readiness.message).not.toContain('Complete Setup');
+  expect(readiness.state).toBe('permission_denied');
+  expect(readiness.message).toContain('Complete Setup');
 });
 
 it('verifies the collection is queryable when properly provisioned', async () => {

@@ -2,11 +2,12 @@ import { withIntlProvider } from '../../intl/withIntlProvider';
 import { FormattedMessage, useIntl, type IntlShape } from 'react-intl';
 import React, { useEffect, useRef, useState } from 'react';
 import { appInstances } from '@wix/app-management';
-import { WixDesignSystemProvider, Page, Card, Table, TableActionCell, Button, TextButton, Badge, ToggleSwitch, Input, NumberInput, FormField, Modal, CustomModalLayout, MessageModalLayout, Box, Heading, Text, Divider, EmptyState, SectionHelper, StatisticsWidget, RadioGroup, Dropdown, Loader, Tooltip, InfoIcon, LinearProgressBar } from '@wix/design-system';
-import { Delete, Checklist, StatusCompleteFilled, StatusWarningFilled, StatusAlertFilled, StatusIndeterminateSmall } from '@wix/wix-ui-icons-common';
+import { WixDesignSystemProvider, Page, Card, Table, TableActionCell, Button, TextButton, Badge, ToggleSwitch, Input, NumberInput, FormField, Modal, CustomModalLayout, MessageModalLayout, Box, Heading, Text, Divider, EmptyState, SectionHelper, StatisticsWidget, RadioGroup, Dropdown, Loader, Tooltip, InfoIcon } from '@wix/design-system';
+import { Delete, Checklist } from '@wix/wix-ui-icons-common';
 import '@wix/design-system/styles.global.css';
+import { InstallationChecklist, StorageSetupNeeded, type ChecklistItem } from '@wix-extensions/core/ui';
 import { loadConfiguration, saveConfiguration, assessConfigurationStorage } from '../../shared/configuration';
-import { confirmStorageWithAutoRetry, extractRequestId, type StorageSetupState, type StorageCheckItem } from '../../shared/storage-readiness';
+import { confirmStorageWithAutoRetry, extractRequestId, storageDetailHint, type StorageSetupState, type StorageCheckItem } from '../../shared/storage-readiness';
 import { emitDiagnostic, markDashboardLoaded, markSetupFinished } from '../../shared/logger';
 import { showAppToast } from '../../shared/toast';
 import { getAppEntitlement, canUsePaidFeatures, getWixPricingPageUrl, AppEntitlement } from '../../shared/entitlement';
@@ -497,14 +498,7 @@ function DepositCraftDashboard() {
     const plansCheck = storageCheckItems.find(i => i.id.includes('depositcraft-plans'));
     const ledgerCheck = storageCheckItems.find(i => i.id.includes('depositcraft-payment-ledger'));
 
-    const checklistItems: Array<{
-      id: string;
-      title: string;
-      detail: string;
-      status: 'complete' | 'checking' | 'warning' | 'danger' | 'pending';
-      badgeText: string;
-      missingPermissions?: string[];
-    }> = [
+    const checklistItems: ChecklistItem[] = [
       {
         id: 'ecommerce',
         title: intl.formatMessage({ id: 'app.checklist.ecommerceTitle', defaultMessage: 'Wix Stores & eCommerce' }),
@@ -514,7 +508,11 @@ function DepositCraftDashboard() {
           ? intl.formatMessage({ id: 'app.checklist.ecommerceMissing', defaultMessage: 'Wix Stores not detected on site' })
           : intl.formatMessage({ id: 'app.checklist.ecommerceReady', defaultMessage: 'Connected and ready' }),
         status: ecommerceInstalled === null ? 'checking' : ecommerceInstalled === false ? 'warning' : 'complete',
-        badgeText: ecommerceInstalled === null ? 'Checking…' : ecommerceInstalled === false ? 'Required' : 'Ready',
+        badgeText: ecommerceInstalled === null
+          ? intl.formatMessage({ id: 'app.checklist.badgeChecking', defaultMessage: 'Checking…' })
+          : ecommerceInstalled === false
+          ? intl.formatMessage({ id: 'app.checklist.badgeRequired', defaultMessage: 'Required' })
+          : intl.formatMessage({ id: 'app.checklist.badgeReady', defaultMessage: 'Ready' }),
       },
       {
         id: 'plans-collection',
@@ -534,12 +532,12 @@ function DepositCraftDashboard() {
           ? 'danger'
           : 'warning',
         badgeText: (plansCheck?.ready || storageReady)
-          ? 'Ready'
+          ? intl.formatMessage({ id: 'app.checklist.badgeReady', defaultMessage: 'Ready' })
           : isCheckingStorage
-          ? 'Checking…'
+          ? intl.formatMessage({ id: 'app.checklist.badgeChecking', defaultMessage: 'Checking…' })
           : plansCheck?.status === 'schema_mismatch'
-          ? 'Update needed'
-          : 'Provisioning',
+          ? intl.formatMessage({ id: 'app.checklist.badgeUpdateNeeded', defaultMessage: 'Update needed' })
+          : intl.formatMessage({ id: 'app.checklist.badgeProvisioning', defaultMessage: 'Provisioning' }),
         missingPermissions: plansCheck?.missingPermissions,
       },
       {
@@ -560,12 +558,12 @@ function DepositCraftDashboard() {
           ? 'danger'
           : 'warning',
         badgeText: (ledgerCheck?.ready || storageReady)
-          ? 'Ready'
+          ? intl.formatMessage({ id: 'app.checklist.badgeReady', defaultMessage: 'Ready' })
           : isCheckingStorage
-          ? 'Checking…'
+          ? intl.formatMessage({ id: 'app.checklist.badgeChecking', defaultMessage: 'Checking…' })
           : ledgerCheck?.status === 'schema_mismatch'
-          ? 'Update needed'
-          : 'Provisioning',
+          ? intl.formatMessage({ id: 'app.checklist.badgeUpdateNeeded', defaultMessage: 'Update needed' })
+          : intl.formatMessage({ id: 'app.checklist.badgeProvisioning', defaultMessage: 'Provisioning' }),
         missingPermissions: ledgerCheck?.missingPermissions,
       },
       {
@@ -580,7 +578,11 @@ function DepositCraftDashboard() {
           ? intl.formatMessage({ id: 'app.checklist.configLoading', defaultMessage: 'Loading saved configuration…' })
           : intl.formatMessage({ id: 'app.checklist.configPending', defaultMessage: 'Awaiting storage setup' }),
         status: storageReady ? 'complete' : isCheckingStorage ? 'checking' : 'pending',
-        badgeText: storageReady ? 'Loaded' : isCheckingStorage ? 'Loading…' : 'Pending',
+        badgeText: storageReady
+          ? intl.formatMessage({ id: 'app.checklist.badgeLoaded', defaultMessage: 'Loaded' })
+          : isCheckingStorage
+          ? intl.formatMessage({ id: 'app.checklist.badgeLoading', defaultMessage: 'Loading…' })
+          : intl.formatMessage({ id: 'app.checklist.badgePending', defaultMessage: 'Pending' }),
       },
       {
         id: 'entitlement',
@@ -591,7 +593,11 @@ function DepositCraftDashboard() {
           ? intl.formatMessage({ id: 'app.checklist.entitlementPro', defaultMessage: 'Pro plan active (unlimited plans unlocked)' })
           : intl.formatMessage({ id: 'app.checklist.entitlementFree', defaultMessage: 'Free tier active (1 active plan limit)' }),
         status: entitlement.status === 'unavailable' ? 'checking' : 'complete',
-        badgeText: entitlement.status === 'unavailable' ? 'Checking…' : isPaidPlan ? 'Pro Plan' : 'Free Plan',
+        badgeText: entitlement.status === 'unavailable'
+          ? intl.formatMessage({ id: 'app.checklist.badgeChecking', defaultMessage: 'Checking…' })
+          : isPaidPlan
+          ? intl.formatMessage({ id: 'app.checklist.badgeProPlan', defaultMessage: 'Pro Plan' })
+          : intl.formatMessage({ id: 'app.checklist.badgeFreePlan', defaultMessage: 'Free Plan' }),
       },
     ];
 
@@ -600,95 +606,33 @@ function DepositCraftDashboard() {
     const progressPercent = Math.round((completedCount / totalCount) * 100);
 
     return (
-      <Card>
-        <Card.Header
-          title={
-            <Box gap="SP2" verticalAlign="middle">
-              <Checklist size="20px" />
-              <Text weight="bold">
-                <FormattedMessage id="app.checklist.cardTitle" defaultMessage="Live Component Checklist" />
-              </Text>
-            </Box>
-          }
-          subtitle={
-            <Text size="tiny" secondary>
-              <FormattedMessage
-                id="app.checklist.cardSubtitle"
-                defaultMessage="{completed} of {total} components ready ({percent}%)"
-                values={{ completed: completedCount, total: totalCount, percent: progressPercent }}
-              />
+      <InstallationChecklist
+        title={
+          <Box gap="SP2" verticalAlign="middle">
+            <Checklist size="20px" />
+            <Text weight="bold">
+              <FormattedMessage id="app.checklist.cardTitle" defaultMessage="Live Component Checklist" />
             </Text>
-          }
-          suffix={
-            <Box gap="SP2" verticalAlign="middle">
-              {isCheckingStorage && <Loader size="tiny" />}
-              <Button size="small" priority="secondary" onClick={() => void reloadStorage(false)} disabled={isCheckingStorage}>
-                <FormattedMessage id="app.common.retry" defaultMessage="Retry" />
-              </Button>
-            </Box>
-          }
-        />
-        <Card.Content>
-          <Box direction="vertical" gap="SP3">
-            <LinearProgressBar
-              value={progressPercent}
-              skin={completedCount === totalCount ? 'success' : 'standard'}
-            />
-            <Box direction="vertical" gap="SP2">
-              {checklistItems.map(item => (
-                <Box
-                  key={item.id}
-                  align="space-between"
-                  verticalAlign="middle"
-                  padding="SP2 SP3"
-                  backgroundColor="D80"
-                  borderRadius="6px"
-                >
-                  <Box gap="SP2" verticalAlign="middle">
-                    {item.status === 'complete' && <StatusCompleteFilled size="18px" />}
-                    {item.status === 'checking' && <Loader size="tiny" />}
-                    {item.status === 'warning' && <StatusWarningFilled size="18px" />}
-                    {item.status === 'danger' && <StatusAlertFilled size="18px" />}
-                    {item.status === 'pending' && <StatusIndeterminateSmall />}
-                    <Box direction="vertical" gap="2px">
-                      <Text weight="bold" size="small">{item.title}</Text>
-                      <Text size="tiny" secondary>{item.detail}</Text>
-                      {item.missingPermissions && item.missingPermissions.length > 0 && (
-                        <Box gap="SP1" verticalAlign="middle">
-                          <Badge skin="danger" size="small">
-                            Missing permissions: {item.missingPermissions.join(', ')}
-                          </Badge>
-                        </Box>
-                      )}
-                    </Box>
-                  </Box>
-                  <Badge
-                    size="small"
-                    skin={
-                      item.status === 'complete'
-                        ? 'success'
-                        : item.status === 'checking'
-                        ? 'standard'
-                        : item.status === 'warning'
-                        ? 'warning'
-                        : item.status === 'danger'
-                        ? 'danger'
-                        : 'neutral'
-                    }
-                  >
-                    {item.badgeText}
-                  </Badge>
-                </Box>
-              ))}
-            </Box>
-            {storageRequestId && (
-              <Text size="tiny" secondary>
-                Wix request ID: {storageRequestId}
-              </Text>
-            )}
           </Box>
-        </Card.Content>
-      </Card>
+        }
+        subtitle={
+          <Text size="tiny" secondary>
+            <FormattedMessage
+              id="app.checklist.cardSubtitle"
+              defaultMessage="{completed} of {total} components ready ({percent}%)"
+              values={{ completed: completedCount, total: totalCount, percent: progressPercent }}
+            />
+          </Text>
+        }
+        items={checklistItems}
+        progressPercent={progressPercent}
+        completedCount={completedCount}
+        totalCount={totalCount}
+        isLoading={isCheckingStorage}
+        onRetry={() => void reloadStorage(false)}
+        retryLabel={<FormattedMessage id="app.common.retry" defaultMessage="Retry" />}
+        missingPermissionsLabel={<FormattedMessage id="app.checklist.missingPermissionsLabel" defaultMessage="Missing permissions:" />}
+      />
     );
   };
 
@@ -730,37 +674,30 @@ function DepositCraftDashboard() {
 
             {!storageReady && !isInitialLoading && (storageState === 'provisioning' || storageState === 'timeout'
               ? <Box direction="vertical" gap="SP4">
-                <Card>
-                  <Card.Content>
-                    <EmptyState
-                      theme="page"
-                      title={intl.formatMessage({ id: 'app.storage.onboardingTitle', defaultMessage: 'Welcome to DepositCraft' })}
-                      subtitle={intl.formatMessage({ id: 'app.storage.onboardingSubtitle', defaultMessage: 'We are setting up your secure private storage. This happens once on install and usually takes 5-10 minutes. This page will refresh automatically when ready.' })}
-                      image={<Box align="center" paddingBottom="24px"><Loader size="large" /></Box>}
-                    />
-                  </Card.Content>
-                </Card>
+                <StorageSetupNeeded
+                  variant="page"
+                  state={storageState}
+                  title={intl.formatMessage({ id: 'app.storage.onboardingTitle', defaultMessage: 'Welcome to DepositCraft' })}
+                  subtitle={intl.formatMessage({ id: 'app.storage.onboardingSubtitle', defaultMessage: 'We are setting up your secure private storage. This happens once on install and usually takes 5-10 minutes. This page will refresh automatically when ready.' })}
+                  isChecking={isCheckingStorage}
+                />
                 {renderLiveChecklist()}
               </Box>
               : <Box direction="vertical" gap="SP4">
-                <Card>
-                  <Card.Content>
-                    <Box align="space-between" verticalAlign="middle" gap="SP3">
-                      <Box direction="vertical" gap="SP1">
-                        <Box gap="SP2" verticalAlign="middle">
-                          <Badge skin="warning" size="small"><FormattedMessage id="app.storage.badge" defaultMessage="Setup needed" /></Badge>
-                          <Text weight="bold">{storageStatusText}</Text>
-                        </Box>
-                        {!isCheckingStorage && <Text size="tiny" secondary>{storageHintText}</Text>}
-                      </Box>
-                      <Box gap="SP2">
-                        <Button priority="secondary" onClick={() => void reloadStorage(false)} disabled={isCheckingStorage}>
-                          <FormattedMessage id="app.common.retry" defaultMessage="Retry" />
-                        </Button>
-                      </Box>
-                    </Box>
-                  </Card.Content>
-                </Card>
+                <StorageSetupNeeded
+                  variant="inline"
+                  state={storageState ?? 'error'}
+                  title={storageStatusText}
+                  subtitle={isCheckingStorage ? '' : storageHintText}
+                  details={isCheckingStorage ? undefined : storageDetailHint(storageState ?? 'error')}
+                  requestId={isCheckingStorage ? undefined : storageRequestId}
+                  requestIdLabel={<FormattedMessage id="app.storage.requestIdLabel" defaultMessage="Wix request ID:" />}
+                  detailsShowLabel={<FormattedMessage id="app.storage.detailsShowLabel" defaultMessage="Show details for support" />}
+                  detailsHideLabel={<FormattedMessage id="app.storage.detailsHideLabel" defaultMessage="Hide details" />}
+                  isChecking={isCheckingStorage}
+                  onRetry={() => void reloadStorage(false)}
+                  retryLabel={<FormattedMessage id="app.common.retry" defaultMessage="Retry" />}
+                />
                 {renderLiveChecklist()}
               </Box>)}
 

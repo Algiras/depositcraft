@@ -29,13 +29,25 @@ describe('assessStorageRequirements', () => {
     expect(result).toMatchObject({ ready: true, state: 'ready' });
   });
 
-  it.each([
-    ['collection not found (WDE0025)', Object.assign(new Error('WDE0025: data collection not found'), {})],
-    ['permission denied (403)', Object.assign(new Error('403: permission denied for app-private collection'), {})],
-  ])('classifies %s as provisioning', async (_label, error) => {
+  it('classifies collection not found (WDE0025) as provisioning', async () => {
+    const error = Object.assign(new Error('WDE0025: data collection not found'), {});
     const result = await readers(async () => { throw error; });
     expect(result).toMatchObject({ ready: false, state: 'provisioning' });
     expect(result.details).toContain(DEPOSITCRAFT_STORAGE_REQUIREMENTS[0].id);
+  });
+
+  // A 401/403 is distinct from "not yet provisioned": it surfaces as its own
+  // `permission_denied` state (with `storageAccessBlockedMessage` copy)
+  // instead of being folded into `provisioning`.
+  it('classifies permission denied (403) as its own permission_denied state', async () => {
+    const error = Object.assign(new Error('403: permission denied for app-private collection'), {});
+    const result = await readers(async () => { throw error; });
+    expect(result).toMatchObject({ ready: false, state: 'permission_denied' });
+    // Unlike the collection-missing branch above, a permission-denied failure
+    // is classified per-error (not aggregated across collections), so its
+    // `details` carries the underlying error message rather than the
+    // collection id list.
+    expect(result.details).toContain('permission denied');
   });
 
   it('classifies wrong field shape as schema_mismatch with update guidance', async () => {

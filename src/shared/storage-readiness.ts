@@ -1,4 +1,18 @@
 import type { StorageState } from '@wix-extensions/core/storage';
+import {
+  appendRequestId as coreAppendRequestId,
+  classifyStorageFailure as coreClassifyStorageFailure,
+  cmsRequiredMessage as coreCmsRequiredMessage,
+  confirmStorageWithAutoRetry as coreConfirmStorageWithAutoRetry,
+  errorDetail as coreErrorDetail,
+  extractRequestId as coreExtractRequestId,
+  isCmsMissing as coreIsCmsMissing,
+  isCollectionMissing as coreIsCollectionMissing,
+  isPermissionDenied as coreIsPermissionDenied,
+  provisioningMessage as coreProvisioningMessage,
+  storageAccessBlockedMessage as coreStorageAccessBlockedMessage,
+  withStorageTimeout as coreWithStorageTimeout,
+} from '@wix-extensions/core/storage';
 
 export type StorageSetupState = StorageState;
 
@@ -20,130 +34,65 @@ export type StorageReadinessAssessment = {
   items?: StorageCheckItem[];
 };
 
-export function errorDetail(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === 'object' && error !== null && 'message' in error) {
-    return String((error as { message: unknown }).message);
-  }
-  return String(error);
-}
+// Byte-for-byte identical to core's implementation.
+export const errorDetail = coreErrorDetail;
 
-export function extractRequestId(error: unknown): string | undefined {
-  const visited = new Set<unknown>();
-  const inspect = (value: unknown, depth: number): string | undefined => {
-    if (typeof value !== 'object' || value === null || depth > 3 || visited.has(value)) return undefined;
-    visited.add(value);
-    for (const key of ['requestId', 'requestID', 'request_id', 'x-request-id']) {
-      const candidate = (value as Record<string, unknown>)[key];
-      if (typeof candidate === 'string' && candidate.trim()) return candidate.trim();
-    }
-    for (const key of ['cause', 'details', 'response', 'data', 'error']) {
-      const nested = inspect((value as Record<string, unknown>)[key], depth + 1);
-      if (nested) return nested;
-    }
-    return undefined;
-  };
-  const propertyValue = inspect(error, 0);
-  if (propertyValue) return propertyValue;
-  return errorDetail(error).match(/(?:request[ _-]?id|x-request-id)\s*[:=]\s*["']?([A-Za-z0-9._:-]+)/i)?.[1];
-}
+// Core's `extractRequestId` now walks the same nested error properties
+// (cause/details/response/data/error/applicationError) this app's local copy
+// used to, plus a couple more (traceId, JSON-string-encoded ids) — a strict
+// superset, so delegate directly.
+export const extractRequestId = coreExtractRequestId;
 
-export function isCollectionMissing(error: unknown): boolean {
-  return /WDE0025|data collection (?:was )?not found|404|NOT_FOUND/i.test(errorDetail(error));
-}
+// Core's matchers are now a superset of this app's former local patterns
+// (e.g. `isCollectionMissing` also matches "collection does not exist",
+// `isCmsMissing` also matches "cms app not installed"/"wix data app is
+// missing"), so delegate directly instead of keeping a narrower local copy.
+export const isCollectionMissing = coreIsCollectionMissing;
+export const isPermissionDenied = coreIsPermissionDenied;
+export const isCmsMissing = coreIsCmsMissing;
 
-export function isPermissionDenied(error: unknown): boolean {
-  return /\b(401|403|forbidden|unauthorized|permission denied)\b/i.test(errorDetail(error));
-}
+// Byte-for-byte identical to core's implementation.
+export const provisioningMessage = coreProvisioningMessage;
 
-export function isCmsMissing(error: unknown): boolean {
-  return /WDE0110|CMS.*not installed/i.test(errorDetail(error));
-}
-
-export function provisioningMessage(appName: string): string {
-  return `${appName} is still provisioning private storage after install or update. This usually finishes within 10–15 minutes — click Check again or keep this page open.`;
-}
-
-/** 403/401 on app-private collections usually means storage is not provisioned yet, not a Manage Apps OAuth step. */
-export function storageAccessBlockedMessage(appName: string): string {
-  return `${appName} private storage is not available on this site yet. In Manage Apps, update ${appName} to the latest version, wait 10–15 minutes after install or update, then click Check again.`;
-}
+// Core's copy differs from this app's former wording (both describe the same
+// "storage access blocked" condition, phrased differently). Per the
+// migration, core's copy wins; this is a user-visible message change for the
+// permission_denied storage state — see PR description / task report.
+export const storageAccessBlockedMessage = coreStorageAccessBlockedMessage;
 
 export function permissionMessage(appName: string): string {
   return storageAccessBlockedMessage(appName);
 }
 
+// Byte-for-byte equivalent to core's implementation when called with no
+// appName (core defaults the placeholder to 'this app', matching this app's
+// former hardcoded string), so delegate directly.
 export function cmsRequiredMessage(): string {
-  return 'Add Wix CMS to this site, update this app to the latest version, then click Retry.';
+  return coreCmsRequiredMessage();
 }
 
 /** Poll while Wix is still propagating extension-backed collections after install/update. */
-export async function confirmStorageWithAutoRetry<T extends { ready: boolean; state?: StorageSetupState }>(
-  check: () => Promise<T>,
+export function confirmStorageWithAutoRetry(
+  probe: () => Promise<StorageReadinessAssessment>,
   options?: { retryDelaysMs?: readonly number[] },
-): Promise<T> {
-  const retryDelaysMs = options?.retryDelaysMs ?? [5000, 10000, 15000];
-  let last = await check();
-  for (const delayMs of retryDelaysMs) {
-    if (last.ready || (last.state !== 'provisioning' && last.state !== 'timeout')) {
-      return last;
-    }
-    await new Promise(resolve => setTimeout(resolve, delayMs));
-    last = await check();
-  }
-  return last;
+): Promise<StorageReadinessAssessment> {
+  // This app's product-tuned retry cadence (5s/10s/15s) is slower than core's
+  // default (1s/2.5s/5s); pass it explicitly to preserve that behavior.
+  return coreConfirmStorageWithAutoRetry(probe, { retryDelaysMs: options?.retryDelaysMs ?? [5000, 10000, 15000] });
 }
 
-export function classifyStorageFailure(error: unknown, appName: string): StorageReadinessAssessment {
-  const details = errorDetail(error);
-  const requestId = extractRequestId(error);
-  if (isCmsMissing(error)) {
-    return { ready: false, state: 'cms_required', message: cmsRequiredMessage(), details, requestId };
-  }
-  if (isCollectionMissing(error)) {
-    return {
-      ready: false,
-      state: 'provisioning',
-      message: provisioningMessage(appName),
-      details,
-      requestId,
-    };
-  }
-  if (isPermissionDenied(error)) {
-    return {
-      ready: false,
-      state: 'provisioning',
-      message: storageAccessBlockedMessage(appName),
-      details,
-      requestId,
-    };
-  }
-  return {
-    ready: false,
-    state: 'error',
-    message: 'We could not confirm storage is set up. Keep this page open and try again, or contact support if this continues.',
-    details,
-    requestId,
-  };
-}
+// Core's `classifyStorageFailure` now checks CMS-missing first, then
+// collection-missing, then permission-denied — the same order this app's
+// local copy used — and returns the distinct `permission_denied` state (with
+// `storageAccessBlockedMessage` copy) instead of folding it into
+// `provisioning`. Delegate directly.
+export const classifyStorageFailure = coreClassifyStorageFailure;
 
-export async function withStorageTimeout<T>(operation: () => Promise<T>, timeoutMs = 15000): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      operation(),
-      new Promise<T>((_, reject) => {
-        timer = setTimeout(() => reject(new Error('STORAGE_CHECK_TIMEOUT')), timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
-}
+// Byte-for-byte identical to core's implementation (same default timeout and error message).
+export const withStorageTimeout = coreWithStorageTimeout;
 
-export function appendRequestId(message: string, requestId?: string): string {
-  return requestId ? `${message} (Wix request ID: ${requestId})` : message;
-}
+// Byte-for-byte identical to core's implementation.
+export const appendRequestId = coreAppendRequestId;
 
 export function storageDetailHint(state: StorageSetupState, requestId?: string): string {
   const hint = (() => {
@@ -156,6 +105,7 @@ export function storageDetailHint(state: StorageSetupState, requestId?: string):
       case 'cms_required':
         return 'Add Wix CMS from the App Market if your site does not have it, then update DepositCraft and click Retry.';
       case 'permission':
+      case 'permission_denied':
         return 'If Manage Apps shows pending permissions for DepositCraft, approve them, wait a few minutes, then click Retry.';
       default:
         return 'If this continues, contact support with your Wix request ID.';

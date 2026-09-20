@@ -1,4 +1,13 @@
-import { biEvents } from '@wix/app-management';
+import {
+  AppLogger as CoreAppLogger,
+  createDiagnostics,
+  isSetupFinished,
+  markDashboardLoaded,
+  markSetupFinished,
+  resetSetupStateForTesting,
+} from '@wix-extensions/core/telemetry';
+
+export { isSetupFinished, markDashboardLoaded, markSetupFinished, resetSetupStateForTesting };
 
 /**
  * Wix BI confirms event submission only. It is not a retrievable support-log
@@ -48,63 +57,35 @@ export type DiagnosticInput = {
 };
 
 const APP_VERSION = '1.0.0';
-const SAFE_ERROR_CODE = /^[A-Z][A-Z0-9_]{1,63}$/;
-const SAFE_REQUEST_ID = /^[A-Za-z0-9._:-]{1,128}$/;
+const APP_NAME = 'depositcraft';
 
-function addIfDefined(eventData: Record<string, string>, key: string, value: string | undefined): void {
-  if (value) eventData[key] = value;
-}
-
-function sendBiEventBestEffort(send: () => Promise<void>): void {
-  try {
-    void send().catch(() => undefined);
-  } catch {
-    // Diagnostics must not break the merchant operation if the SDK cannot initialize.
-  }
-}
+/**
+ * `createDiagnostics` now emits the exact same snake_case BI wire schema this
+ * app has always sent under `depositcraft_*` custom event names
+ * (`app_version`/`schema_version`/`timestamp`/`outcome`/`surface`/
+ * `duration_ms`/`error_code`/`wix_request_id`/`mode`/`attempts`), so the
+ * app-specific implementation that used to live here has been removed in
+ * favor of delegating to core. See `logger.test.ts` for the pinned wire shape.
+ */
+const diagnostics = createDiagnostics({ appName: APP_NAME, appVersion: APP_VERSION, schemaVersion: '1' });
 
 /**
  * Best-effort, client-side Wix BI ingress with a closed schema. Deliberately
  * do not await it: diagnostics must never block the primary app operation.
  */
 export function emitDiagnostic(eventName: DiagnosticEventName, input: DiagnosticInput): void {
-  const eventData: Record<string, string> = {
-    app_version: APP_VERSION,
-    schema_version: '1',
-    timestamp: new Date().toISOString(),
-    outcome: input.outcome,
-    surface: input.surface ?? 'dashboard',
-  };
-  if (Number.isFinite(input.durationMs) && input.durationMs! >= 0) {
-    eventData.duration_ms = String(Math.round(input.durationMs!));
-  }
-  addIfDefined(eventData, 'error_code', input.errorCode && SAFE_ERROR_CODE.test(input.errorCode) ? input.errorCode : undefined);
-  addIfDefined(eventData, 'wix_request_id', input.wixRequestId && SAFE_REQUEST_ID.test(input.wixRequestId) ? input.wixRequestId : undefined);
-  addIfDefined(eventData, 'mode', input.mode);
-
-  sendBiEventBestEffort(() => biEvents.sendBiEvent({
-    eventName: 'CUSTOM',
-    customEventName: `depositcraft_${eventName}`,
-    eventData,
-  }));
-}
-
-/** Call only when the caller has established required first-run setup is complete. */
-export function markSetupFinished(): void {
-  sendBiEventBestEffort(() => biEvents.sendBiEvent({ eventName: 'APP_SETUP_FINISHED' }));
-}
-
-/** Call once when the app's dashboard page mounts; measures install -> visit adoption. */
-export function markDashboardLoaded(): void {
-  sendBiEventBestEffort(() => biEvents.sendBiEvent({ eventName: 'APP_DASHBOARD_LOADED' }));
+  diagnostics.emitDiagnostic(eventName, input);
 }
 
 /**
  * Zero-Infra Telemetry & Structured Logger for DepositCraft.
  * Emits machine-parseable JSON logs ingested directly by Wix Dev Center Monitoring.
  * Tracks execution durations, deposit calculations, layaway schedules, and error boundaries at $0.00/mo cost.
+ *
+ * Delegates `info`/`warn`/`error`/`time` to `@wix-extensions/core/telemetry`'s
+ * `AppLogger` (identical implementation) and adds the app-specific
+ * `trackUsage` method that core does not provide.
  */
-
 export interface LogPayload {
   app: string;
   version?: string;
@@ -119,64 +100,26 @@ export interface LogPayload {
 }
 
 export class AppLogger {
-  private appName: string;
-  private version: string;
+  private readonly core: CoreAppLogger;
 
-  constructor(appName: string, version: string = '1.0.0') {
-    this.appName = appName;
-    this.version = version;
+  constructor(private readonly appName: string, private readonly version: string = '1.0.0') {
+    this.core = new CoreAppLogger(appName, version);
   }
 
-  /**
-   * Times the execution of an async or synchronous function and logs execution telemetry.
-   */
-  async time<T>(action: string, fn: () => Promise<T> | T, context?: Record<string, any>): Promise<T> {
-    const start = Date.now();
-    try {
-      const result = await fn();
-      const durationMs = Date.now() - start;
-      this.info(action, { durationMs, data: context });
-      return result;
-    } catch (err: any) {
-      const durationMs = Date.now() - start;
-      this.error(action, err, { durationMs, data: context });
-      throw err;
-    }
+  time<T>(action: string, fn: () => Promise<T> | T, context?: Record<string, any>): Promise<T> {
+    return this.core.time(action, fn, context);
   }
 
   info(action: string, meta?: Partial<LogPayload>): void {
-    const payload: LogPayload = {
-      app: this.appName,
-      version: this.version,
-      action,
-      ...meta,
-    };
-    console.info(`[TELEMETRY:INFO] ${JSON.stringify(payload)}`);
+    this.core.info(action, meta);
   }
 
   warn(action: string, meta?: Partial<LogPayload>): void {
-    const payload: LogPayload = {
-      app: this.appName,
-      version: this.version,
-      action,
-      ...meta,
-    };
-    console.warn(`[TELEMETRY:WARN] ${JSON.stringify(payload)}`);
+    this.core.warn(action, meta);
   }
 
   error(action: string, error: any, meta?: Partial<LogPayload>): void {
-    const payload: LogPayload = {
-      app: this.appName,
-      version: this.version,
-      action,
-      ...meta,
-      error: {
-        name: error?.name || 'Error',
-        message: error?.message || String(error),
-        stack: error?.stack,
-      },
-    };
-    console.error(`[TELEMETRY:ERROR] ${JSON.stringify(payload)}`);
+    this.core.error(action, error, meta);
   }
 
   /**
