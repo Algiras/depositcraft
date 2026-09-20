@@ -78,6 +78,21 @@ export function emitDiagnostic(eventName: DiagnosticEventName, input: Diagnostic
 }
 
 /**
+ * Elevated diagnostics surface for BACKEND-ONLY callers (SPI plugins, backend
+ * verification/lifecycle code, automation reporters). Backend contexts have
+ * no merchant session, so a plain BI send fails with "Missing authentication
+ * information" — these must go through `auth.elevate`. This module is also
+ * imported by dashboard code and by shared code used from both dashboard and
+ * backend (e.g. `./configuration`), which must NOT elevate, so backend-only
+ * files import `emitBackendDiagnostic` instead of `emitDiagnostic`.
+ */
+const backendDiagnostics = createDiagnostics({ appName: APP_NAME, appVersion: APP_VERSION, schemaVersion: '1', elevated: true });
+
+export function emitBackendDiagnostic(eventName: DiagnosticEventName, input: DiagnosticInput): void {
+  backendDiagnostics.emitDiagnostic(eventName, input);
+}
+
+/**
  * Zero-Infra Telemetry & Structured Logger for DepositCraft.
  * Emits machine-parseable JSON logs ingested directly by Wix Dev Center Monitoring.
  * Tracks execution durations, deposit calculations, layaway schedules, and error boundaries at $0.00/mo cost.

@@ -7,7 +7,7 @@ import {
   installmentAutomationIdempotencyKey,
   type InstallmentAutomationPayload,
 } from '../shared/automation-triggers';
-import { emitDiagnostic } from '../shared/logger';
+import { emitBackendDiagnostic as emitDiagnostic } from '../shared/logger';
 import type { PaymentLedger } from '../shared/payment-ledger';
 
 async function orderContactId(orderId: string): Promise<string | undefined> {

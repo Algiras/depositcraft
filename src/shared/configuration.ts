@@ -12,12 +12,20 @@ import { COLLECTION_ID } from './storage-collections';
 export { COLLECTION_ID };
 const APP_NAME = 'DepositCraft';
 
-export async function assessConfigurationStorage(): Promise<StorageReadinessAssessment> {
+/**
+ * `getCollection` defaults to the plain (unelevated) `collections.getDataCollection`
+ * for dashboard/browser callers, which have a merchant session. Backend callers with
+ * no merchant session (e.g. the tools-provider SPI) must pass
+ * `auth.elevate(collections.getDataCollection)` or the call fails with 403 Forbidden.
+ */
+export async function assessConfigurationStorage(
+  getCollection: typeof collections.getDataCollection = collections.getDataCollection,
+): Promise<StorageReadinessAssessment> {
   const start = Date.now();
   try {
     const assessment = await withStorageTimeout(() =>
       assessStorageRequirements(
-        (id: string) => collections.getDataCollection(id, { consistentRead: true }),
+        (id: string) => getCollection(id, { consistentRead: true }),
         APP_NAME,
       ));
     if (!assessment.ready) {
@@ -55,14 +63,21 @@ function provisioningTimeoutMessage(): string {
   return `${APP_NAME} is still provisioning private storage after install or update. This usually finishes within 10–15 minutes — click Check again or keep this page open.`;
 }
 
-export async function verifyConfigurationStorage(): Promise<boolean> {
-  return (await assessConfigurationStorage()).ready;
+export async function verifyConfigurationStorage(
+  getCollection: typeof collections.getDataCollection = collections.getDataCollection,
+): Promise<boolean> {
+  return (await assessConfigurationStorage(getCollection)).ready;
 }
 
-export async function loadConfiguration<T>(): Promise<T[]> {
+/**
+ * `query` defaults to the plain (unelevated) `items.query`, matching
+ * `listDepositRules`'s own default, for dashboard callers. Backend callers
+ * with no merchant session must pass `auth.elevate(items.query)`.
+ */
+export async function loadConfiguration<T>(query: typeof items.query = items.query): Promise<T[]> {
   const start = Date.now();
   try {
-    const result = await items.query(COLLECTION_ID).eq('_id', 'configuration').find({ consistentRead: true });
+    const result = await query(COLLECTION_ID).eq('_id', 'configuration').find({ consistentRead: true });
     const entries = (result.items[0]?.payload?.entries as T[] | undefined) ?? [];
     emitDiagnostic('configuration_load', { outcome: 'success', durationMs: Date.now() - start });
     return entries;

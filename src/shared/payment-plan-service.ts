@@ -18,6 +18,30 @@ import { installmentDueAt } from './installment-dates';
 import { CheckoutLineItem, DepositRule } from '../types';
 import { syncInstallmentAutomations } from '../backend/automation-reporter';
 
+/**
+ * `startPaymentPlanForOrder` and `syncPaymentPlanFromWix` are dashboard-only
+ * (called with the merchant session), so their Wix Data/ecom calls stay
+ * unelevated by default. `advancePaymentPlanForOrder` is also driven from the
+ * backend billing scheduler (no merchant session), so it accepts an optional
+ * `PaymentDataAccess` -- backend callers pass a fully `auth.elevate`d one;
+ * dashboard callers omit it and get today's unelevated behavior.
+ */
+export interface PaymentDataAccess {
+  getItem: typeof items.get;
+  saveItem: typeof items.save;
+  queryRequests: typeof orderPaymentRequests.queryOrderPaymentRequests;
+  createRequest: typeof orderPaymentRequests.createOrderPaymentRequest;
+  getRequestUrl: typeof orderPaymentRequests.getOrderPaymentRequestUrl;
+}
+
+const defaultDataAccess: PaymentDataAccess = {
+  getItem: items.get,
+  saveItem: items.save,
+  queryRequests: orderPaymentRequests.queryOrderPaymentRequests,
+  createRequest: orderPaymentRequests.createOrderPaymentRequest,
+  getRequestUrl: orderPaymentRequests.getOrderPaymentRequestUrl,
+};
+
 const inFlightByOrder = new Map<string, Promise<unknown>>();
 
 async function withOrderLock<T>(orderId: string, work: () => Promise<T>): Promise<T> {
@@ -60,13 +84,13 @@ async function loadSavedPlan(ruleId: string): Promise<DepositRule> {
   return rule;
 }
 
-async function paymentUrl(paymentRequestId: string): Promise<string> {
-  const response = await orderPaymentRequests.getOrderPaymentRequestUrl(paymentRequestId);
+async function paymentUrl(paymentRequestId: string, getRequestUrl: PaymentDataAccess['getRequestUrl']): Promise<string> {
+  const response = await getRequestUrl(paymentRequestId);
   if (!response.orderPaymentRequestUrl) throw new Error('Wix did not return a payment-request URL.');
   return response.orderPaymentRequestUrl;
 }
 
-async function createNextRequest(ledger: PaymentLedger): Promise<PaymentLedger> {
+async function createNextRequest(ledger: PaymentLedger, access: PaymentDataAccess = defaultDataAccess): Promise<PaymentLedger> {
   const next = ledger.installments.find(item => item.status === 'PENDING' && !item.paymentRequestId);
   if (!next) return ledger;
   const creating = {
@@ -75,10 +99,10 @@ async function createNextRequest(ledger: PaymentLedger): Promise<PaymentLedger> 
       item.installmentNumber === next.installmentNumber ? { ...item, status: 'CREATING' as const } : item
     )),
   };
-  await items.save(PAYMENT_LEDGER_COLLECTION, toLedgerRecord(creating));
+  await access.saveItem(PAYMENT_LEDGER_COLLECTION, toLedgerRecord(creating));
   const externalId = paymentRequestExternalId(ledger.orderId, next.installmentNumber);
-  const existing = await orderPaymentRequests.queryOrderPaymentRequests().eq('source.externalId', externalId).find();
-  const paymentRequest = existing.items[0] ?? await orderPaymentRequests.createOrderPaymentRequest({
+  const existing = await access.queryRequests().eq('source.externalId', externalId).find();
+  const paymentRequest = existing.items[0] ?? await access.createRequest({
     orderPaymentRequest: {
       orderId: ledger.orderId,
       amount: { amount: next.amount.toFixed(2) },
@@ -89,7 +113,7 @@ async function createNextRequest(ledger: PaymentLedger): Promise<PaymentLedger> 
   });
   const paymentRequestId = paymentRequest._id;
   if (!paymentRequestId) throw new Error('Wix did not return an order payment request ID.');
-  const url = await paymentUrl(paymentRequestId);
+  const url = await paymentUrl(paymentRequestId, access.getRequestUrl);
   const updated = {
     ...creating,
     installments: creating.installments.map(item => (
@@ -98,7 +122,7 @@ async function createNextRequest(ledger: PaymentLedger): Promise<PaymentLedger> 
         : item
     )),
   };
-  await items.save(PAYMENT_LEDGER_COLLECTION, toLedgerRecord(updated));
+  await access.saveItem(PAYMENT_LEDGER_COLLECTION, toLedgerRecord(updated));
   await syncInstallmentAutomations(updated);
   return updated;
 }
@@ -159,13 +183,21 @@ export async function startPaymentPlanForOrder(orderId: string, ruleId: string):
   });
 }
 
-/** Creates the next unpaid installment link when the previous one is already marked paid in the ledger. */
-export async function advancePaymentPlanForOrder(orderId: string): Promise<StartedPaymentPlan | undefined> {
+/**
+ * Creates the next unpaid installment link when the previous one is already marked
+ * paid in the ledger. Called both from the dashboard (merchant session; `access`
+ * omitted, unelevated) and from the backend billing scheduler (no merchant session;
+ * caller must pass a fully `auth.elevate`d `PaymentDataAccess`).
+ */
+export async function advancePaymentPlanForOrder(
+  orderId: string,
+  access: PaymentDataAccess = defaultDataAccess,
+): Promise<StartedPaymentPlan | undefined> {
   if (!orderId) throw new Error('An existing Wix order ID is required.');
   return withOrderLock(orderId, async () => {
-    const ledger = await getPaymentLedger(orderId);
+    const ledger = await getPaymentLedger(orderId, access.getItem);
     if (!ledger) throw new Error('No DepositCraft payment plan exists for this order yet.');
-    const updated = await createNextRequest(ledger);
+    const updated = await createNextRequest(ledger, access);
     const pending = updated.installments.find(item => item.paymentRequestUrl && item.status !== 'PAID');
     return pending?.paymentRequestUrl ? startedPlan(updated) : undefined;
   });

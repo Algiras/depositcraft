@@ -47,9 +47,17 @@ export function fromLedgerRecord(raw: unknown): PaymentLedger | undefined {
   return record.payload ?? record;
 }
 
-export async function getPaymentLedger(orderId: string): Promise<PaymentLedger | undefined> {
+/**
+ * `getItem` defaults to the plain (unelevated) `items.get` for dashboard
+ * callers, which have a merchant session. Backend callers with no merchant
+ * session must pass `auth.elevate(items.get)` or the read fails with 403.
+ */
+export async function getPaymentLedger(
+  orderId: string,
+  getItem: typeof items.get = items.get,
+): Promise<PaymentLedger | undefined> {
   try {
-    return fromLedgerRecord(await items.get(PAYMENT_LEDGER_COLLECTION, orderId));
+    return fromLedgerRecord(await getItem(PAYMENT_LEDGER_COLLECTION, orderId));
   } catch {
     return undefined;
   }

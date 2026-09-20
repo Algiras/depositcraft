@@ -5,6 +5,7 @@ import {
   type PaymentLedger,
 } from './payment-ledger';
 import { advancePaymentPlanForOrder } from './payment-plan-service';
+import type { StartedPaymentPlan } from './payment-ledger';
 import { listRecordsPage, type RecordsPage } from './configuration';
 
 export type BillingRunResult = {
@@ -37,8 +38,18 @@ export async function listPaymentLedgerPage(opts: { cursor?: string; pageSize?: 
   return { items: ledgers, nextCursor: page.nextCursor, hasNext: page.hasNext };
 }
 
-/** Creates payment links for installments whose due date has passed. Customers still pay manually. */
-export async function processDueInstallments(queryLedgers: QueryLedgers = defaultQueryLedgers): Promise<BillingRunResult> {
+type AdvancePlan = (orderId: string) => Promise<StartedPaymentPlan | undefined>;
+
+/**
+ * Creates payment links for installments whose due date has passed. Customers still pay
+ * manually. `queryLedgers`/`advance` default to the plain, unelevated dashboard behavior
+ * (merchant session). The backend billing scheduler (no merchant session) passes an
+ * elevated `queryLedgers` and an `advance` bound to an `auth.elevate`d `PaymentDataAccess`.
+ */
+export async function processDueInstallments(
+  queryLedgers: QueryLedgers = defaultQueryLedgers,
+  advance: AdvancePlan = advancePaymentPlanForOrder,
+): Promise<BillingRunResult> {
   const now = new Date();
   const ledgers = await queryLedgers();
   let linksCreated = 0;
@@ -49,7 +60,7 @@ export async function processDueInstallments(queryLedgers: QueryLedgers = defaul
     dueCount += dueInstallments.length;
     const hasOpenRequest = ledger.installments.some(item => item.paymentRequestUrl && item.status !== 'PAID');
     if (hasOpenRequest) continue;
-    const result = await advancePaymentPlanForOrder(ledger.orderId);
+    const result = await advance(ledger.orderId);
     if (result) linksCreated += 1;
   }
   return { scanned: ledgers.length, linksCreated, dueCount };

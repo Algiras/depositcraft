@@ -16,7 +16,7 @@ import {
 import { syncInstallmentAutomations } from './automation-reporter';
 import { createNextRequest } from './payment-request-lifecycle';
 import type { CheckoutLineItem, DepositRule } from '../types';
-import { emitDiagnostic } from '../shared/logger';
+import { emitBackendDiagnostic as emitDiagnostic } from '../shared/logger';
 
 function toCheckoutLineItems(order: {
   lineItems?: Array<{
@@ -74,7 +74,7 @@ function ledgerFromCheckoutOrder(
 /** Seeds a ledger when checkout collected only the deposit (usually via paired automatic discount). */
 export async function reconcileCheckoutDepositOrder(orderId: string): Promise<PaymentLedger | undefined> {
   if (!orderId) return undefined;
-  const existing = await getPaymentLedger(orderId);
+  const existing = await getPaymentLedger(orderId, auth.elevate(items.get));
   if (existing) return existing;
   const order = await auth.elevate(orders.getOrder)(orderId);
   const paidAmount = money(order.priceSummary?.total?.amount);
@@ -82,7 +82,7 @@ export async function reconcileCheckoutDepositOrder(orderId: string): Promise<Pa
   if (!currency || paidAmount <= 0) return undefined;
   const [rules, entitlement] = await Promise.all([
     listDepositRules(auth.elevate(items.query)),
-    getAppEntitlement(),
+    getAppEntitlement({ elevated: true }),
   ]);
   const enabled = restrictRulesForEntitlement(rules.filter(rule => rule.enabled), entitlement);
   const lineItems = toCheckoutLineItems(order);
@@ -100,7 +100,7 @@ export async function reconcileCheckoutDepositOrder(orderId: string): Promise<Pa
     try {
       await auth.elevate(items.insert)(PAYMENT_LEDGER_COLLECTION, toLedgerRecord(ledger));
     } catch {
-      const created = await getPaymentLedger(orderId);
+      const created = await getPaymentLedger(orderId, auth.elevate(items.get));
       if (created) return created;
       continue;
     }

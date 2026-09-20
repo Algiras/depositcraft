@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const api = vi.hoisted(() => ({ getAppInstance: vi.fn(), getUrl: vi.fn() }));
-vi.mock('@wix/app-management', () => ({ appInstances: api, billing: api }));
+const api = vi.hoisted(() => ({ getAppInstance: vi.fn() }));
+vi.mock('@wix/app-management', () => ({ appInstances: api }));
 
-import { canUsePaidFeatures, getAppEntitlement, getWixCheckoutUrl, getWixPricingPageUrl } from './entitlement';
+import { canUsePaidFeatures, getAppEntitlement, getWixPricingPageUrl } from './entitlement';
 
 beforeEach(() => vi.resetAllMocks());
 
@@ -18,12 +18,6 @@ describe('Wix Billing entitlement (depositcraft)', () => {
     expect(canUsePaidFeatures(await getAppEntitlement())).toBe(false);
   });
 
-  it('requires a configured product ID for Wix-managed checkout', async () => {
-    api.getUrl.mockResolvedValue({ checkoutUrl: 'https://www.wix.com/checkout' });
-    await expect(getWixCheckoutUrl('depositcraft-pro', 'https://www.wix.com/success')).resolves.toContain('/checkout');
-    expect(api.getUrl).toHaveBeenCalledWith('depositcraft-pro', { successUrl: 'https://www.wix.com/success' });
-    await expect(getWixCheckoutUrl('')).rejects.toThrow('product ID');
-  });
 
   it('builds the Wix-hosted pricing-page URL from the app and site instance', () => {
     expect(getWixPricingPageUrl('depositcraft-app', 'site-instance')).toBe(

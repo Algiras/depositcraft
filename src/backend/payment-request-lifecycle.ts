@@ -37,7 +37,7 @@ async function withOrderLock<T>(orderId: string, work: () => Promise<T>): Promis
 
 export async function initializePaymentLedger(): Promise<void> {
   try {
-    await collections.getDataCollection(PAYMENT_LEDGER_COLLECTION, { consistentRead: true });
+    await auth.elevate(collections.getDataCollection)(PAYMENT_LEDGER_COLLECTION, { consistentRead: true });
   } catch {
     throw new Error('Private storage is not ready on this site. Install or update the app, wait up to five minutes, then click Retry.');
   }
@@ -117,12 +117,12 @@ export async function createNextRequest(ledger: PaymentLedger): Promise<PaymentL
 export async function startExistingOrderPaymentPlan(orderId: string, ruleId: string): Promise<StartedPaymentPlan> {
   if (!orderId || !ruleId) throw new Error('An existing Wix order ID and saved plan ID are required.');
   return withOrderLock(orderId, async () => {
-    const existing = await getPaymentLedger(orderId);
+    const existing = await getPaymentLedger(orderId, auth.elevate(items.get));
     if (existing) return startedPlan(existing);
     const [order, rule, entitlement] = await Promise.all([
       auth.elevate(orders.getOrder)(orderId),
       loadSavedPlan(ruleId),
-      getAppEntitlement(),
+      getAppEntitlement({ elevated: true }),
     ]);
     const gate = evaluateRuleAgainstPlan(rule, entitlement, 0);
     if (!gate.allowed) throw new Error(gate.message ?? 'This plan is not available on the current billing plan.');
@@ -153,7 +153,7 @@ export async function startExistingOrderPaymentPlan(orderId: string, ruleId: str
     try {
       await auth.elevate(items.insert)(PAYMENT_LEDGER_COLLECTION, toLedgerRecord(ledger));
     } catch {
-      const createdByAnotherRequest = await getPaymentLedger(orderId);
+      const createdByAnotherRequest = await getPaymentLedger(orderId, auth.elevate(items.get));
       if (createdByAnotherRequest) return startedPlan(createdByAnotherRequest);
       throw new Error('DepositCraft could not create the order payment ledger.');
     }
@@ -165,7 +165,7 @@ export async function startExistingOrderPaymentPlan(orderId: string, ruleId: str
 export async function handleOrderPaymentRequestPaid(paymentRequestId: string, orderId?: string): Promise<void> {
   if (!paymentRequestId || !orderId) return;
   await withOrderLock(orderId, async () => {
-    const ledger = await getPaymentLedger(orderId);
+    const ledger = await getPaymentLedger(orderId, auth.elevate(items.get));
     if (!ledger) return;
     const current = ledger.installments.find(item => item.paymentRequestId === paymentRequestId);
     if (!current || current.status === 'PAID') return;

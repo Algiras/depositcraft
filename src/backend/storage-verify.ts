@@ -1,6 +1,6 @@
 import { auth } from '@wix/essentials';
 import { collections } from '@wix/data';
-import { emitDiagnostic } from '../shared/logger';
+import { emitBackendDiagnostic as emitDiagnostic } from '../shared/logger';
 import { assessStorageRequirements } from '../shared/storage-shape';
 import type { StorageReadinessAssessment } from '../shared/storage-readiness';
 

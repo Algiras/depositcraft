@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const emitDiagnostic = vi.fn();
 vi.mock('../shared/logger', () => ({
-  emitDiagnostic: (...args: unknown[]) => emitDiagnostic(...args),
+  emitBackendDiagnostic: (...args: unknown[]) => emitDiagnostic(...args),
 }));
 
 import { runInstallStorageVerification } from './storage-verify';
@@ -39,6 +39,16 @@ describe('runInstallStorageVerification', () => {
       outcome: 'success',
       attempts: 3,
     }));
+  });
+
+  it('retries a first-attempt permission_denied (403) through the install-verify budget instead of treating it as final', async () => {
+    const blocked: StorageReadinessAssessment = { ready: false, state: 'permission_denied', message: 'blocked' };
+    const assess = vi.fn()
+      .mockResolvedValueOnce(blocked)
+      .mockResolvedValueOnce(ready);
+    const result = await runInstallStorageVerification([1, 1], assess);
+    expect(result).toBe(ready);
+    expect(assess).toHaveBeenCalledTimes(2);
   });
 
   it('stays bounded: one attempt per delay slot, failure telemetry carries the last state', async () => {

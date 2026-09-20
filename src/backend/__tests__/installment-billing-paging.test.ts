@@ -30,7 +30,7 @@ vi.mock('@wix/data', () => ({
   permissions: { getPermissions: vi.fn() },
 }));
 
-import { listPaymentLedgerPage } from '../../shared/installment-billing';
+import { listPaymentLedgerPage, processDueInstallments } from '../../shared/installment-billing';
 
 function ledger(orderId: string): PaymentLedger {
   return {
@@ -67,4 +67,18 @@ it('drops null raw records instead of surfacing them as blank rows', async () =>
   const page = await listPaymentLedgerPage({ pageSize: 10 });
   expect(page.items).toHaveLength(1);
   expect(page.items[0].orderId).toBe('order-0');
+});
+
+// The backend billing scheduler passes its own `queryLedgers` (elevated) and
+// `advance` (bound to an elevated `PaymentDataAccess`) instead of the
+// module's defaults; the dashboard's "Process due installments" button omits
+// both and gets today's unelevated behavior. This proves the `advance`
+// parameter is actually invoked per due ledger rather than ignored.
+it('threads a caller-supplied advance function (e.g. an elevated backend one) per due ledger', async () => {
+  const due = ledger('order-9');
+  due.installments = [{ installmentNumber: 1, amount: 25, status: 'PENDING', dueAt: new Date(Date.now() - 1000).toISOString() }];
+  const advance = vi.fn(async () => undefined);
+  const result = await processDueInstallments(async () => [due], advance);
+  expect(advance).toHaveBeenCalledWith('order-9');
+  expect(result).toEqual({ scanned: 1, linksCreated: 0, dueCount: 1 });
 });

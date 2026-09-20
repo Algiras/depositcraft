@@ -1,7 +1,8 @@
+import { items } from '@wix/data';
 import { evaluateDepositPlan } from '../backend/deposit-engine';
 import type { CheckoutLineItem, DepositEvaluationResult, DepositRule } from '../types';
 import { listDepositRules } from './rules-store';
-import { getAppEntitlement } from './entitlement';
+import { getAppEntitlement, type GetAppEntitlementOptions } from './entitlement';
 import { restrictRulesForEntitlement } from './plan-limits';
 import { depositTriggerId } from './deposit-trigger-id';
 
@@ -35,8 +36,22 @@ export function deferredDiscountPercent(evaluation: DepositEvaluationResult): nu
   return Math.round((evaluation.remainingBalance / evaluation.orderSubtotal) * 10000) / 100;
 }
 
-export async function evaluateCartDepositPlans(lineItems: ReadonlyArray<unknown> | undefined, currency = 'USD') {
-  const [rules, entitlement] = await Promise.all([listDepositRules(), getAppEntitlement()]);
+/**
+ * `query` defaults to the plain (unelevated) `items.query`, matching
+ * `listDepositRules`'s own default, for dashboard callers. Backend/SPI
+ * callers (which have no merchant session) must pass `auth.elevate(items.query)`
+ * or the underlying `items.query(...).find(...)` call fails with
+ * "Missing authentication information". Likewise `entitlementOptions` defaults
+ * to non-elevated (dashboard-safe); backend/SPI callers must pass `{ elevated: true }`
+ * or the entitlement's app-instance lookup fails with 403 Forbidden.
+ */
+export async function evaluateCartDepositPlans(
+  lineItems: ReadonlyArray<unknown> | undefined,
+  currency = 'USD',
+  query: typeof items.query = items.query,
+  entitlementOptions: GetAppEntitlementOptions = {},
+) {
+  const [rules, entitlement] = await Promise.all([listDepositRules(query), getAppEntitlement(entitlementOptions)]);
   const enabled = restrictRulesForEntitlement(rules.filter(rule => rule.enabled), entitlement);
   const evaluation = evaluateDepositPlan({
     currency,

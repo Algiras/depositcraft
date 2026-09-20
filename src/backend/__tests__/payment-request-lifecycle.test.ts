@@ -9,7 +9,8 @@ vi.mock('@wix/data', () => ({ collections: { createDataCollection: vi.fn(async (
   },
   save: async (_: string, item: any) => { state.ledger = structuredClone(item); return item; },
 } }));
-vi.mock('@wix/essentials', () => ({ auth: { elevate: (fn: unknown) => fn } }));
+const elevateSpy = vi.hoisted(() => vi.fn((fn: unknown) => fn));
+vi.mock('@wix/essentials', () => ({ auth: { elevate: elevateSpy } }));
 vi.mock('@wix/app-management', () => ({ appInstances: { getAppInstance: async () => ({ instance: { isFree: state.isFree } }) }, billing: { getUrl: vi.fn() } }));
 vi.mock('@wix/automations', () => ({
   activations: {
@@ -55,4 +56,19 @@ it('refuses to start real payment collection for a fixed-amount plan on a free i
   } finally {
     state.isFree = false;
   }
+});
+
+// This whole module runs server-side with no merchant session (SPI plugins,
+// lifecycle event handlers), so every Wix Data/entitlement call it makes must
+// go through `auth.elevate` or it fails with 403 Forbidden / "Missing
+// authentication information". Asserts the ledger read and the entitlement
+// lookup are both actually elevated, not just that the (identity-mocked)
+// `auth.elevate` wrapper happens to be a no-op here.
+it('elevates the payment-ledger read and the entitlement lookup (no merchant session)', async () => {
+  state.ledger = undefined; state.created = []; elevateSpy.mockClear();
+  await startExistingOrderPaymentPlan('order-elevation-check', 'plan-25');
+  const { items } = await import('@wix/data');
+  const { appInstances } = await import('@wix/app-management');
+  expect(elevateSpy).toHaveBeenCalledWith(items.get);
+  expect(elevateSpy).toHaveBeenCalledWith(appInstances.getAppInstance);
 });

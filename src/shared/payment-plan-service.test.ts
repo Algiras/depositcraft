@@ -124,3 +124,32 @@ it('advances manually when the previous installment is already marked paid', asy
   const result = await advancePaymentPlanForOrder('order-3');
   expect(result?.paymentRequestUrl).toBe('https://pay.wix.test/request-2');
 });
+
+// The backend billing scheduler (`installment-scheduler.ts`) has no merchant
+// session, so it drives `advancePaymentPlanForOrder` with a fully
+// `auth.elevate`d `PaymentDataAccess` instead of the module's default,
+// unelevated `items`/`orderPaymentRequests` bindings. This proves a
+// caller-supplied access object is actually used end-to-end, and that the
+// module-default (dashboard) SDK bindings are left untouched when it is.
+it('advances via a caller-supplied PaymentDataAccess instead of the module defaults', async () => {
+  await startPaymentPlanForOrder('order-4', 'plan-25');
+  state.ledger.payload.installments[0].status = 'PAID';
+  state.ledger.payload.installments[0].paymentRequestId = 'request-1';
+  delete state.ledger.payload.installments[0].paymentRequestUrl;
+  const defaultCreatedBefore = state.created.length;
+
+  const custom = { saved: [] as any[], created: [] as any[] };
+  const access = {
+    getItem: async (_: string, id: string) => (state.ledger?._id === id ? structuredClone(state.ledger) : undefined),
+    saveItem: async (_: string, item: any) => { custom.saved.push(item); state.ledger = structuredClone(item); return item; },
+    queryRequests: () => ({ eq: () => ({ find: async () => ({ items: [] }) }) }),
+    createRequest: async (request: any) => { custom.created.push(request); return { _id: `elevated-request-${custom.created.length}` }; },
+    getRequestUrl: async (id: string) => ({ orderPaymentRequestUrl: `https://elevated.pay.test/${id}` }),
+  };
+
+  const result = await advancePaymentPlanForOrder('order-4', access as never);
+  expect(result?.paymentRequestUrl).toBe('https://elevated.pay.test/elevated-request-1');
+  expect(custom.created).toHaveLength(1);
+  expect(custom.saved.length).toBeGreaterThan(0);
+  expect(state.created).toHaveLength(defaultCreatedBefore);
+});
