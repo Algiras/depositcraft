@@ -8,7 +8,7 @@ import { loadConfiguration } from '../../../shared/configuration';
 import { emitDiagnostic } from '../../../shared/logger';
 import type { LedgerInstallment, PaymentLedger } from '../../../shared/payment-ledger';
 import { getPaymentLedger } from '../../../shared/payment-ledger';
-import { advancePaymentPlanForOrder, startPaymentPlanForOrder, syncPaymentPlanFromWix } from '../../../shared/payment-plan-service';
+import { advancePaymentPlanForOrder, startPaymentPlanForOrder, syncPaymentPlanFromWix } from '../../../backend/payment-plan.web';
 import { showAppToast } from '../../../shared/toast';
 import type { DepositRule } from '../../../types';
 import { withIntlProvider } from '../../../intl/withIntlProvider';

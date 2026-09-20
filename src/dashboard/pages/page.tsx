@@ -14,7 +14,7 @@ import { showAppToast } from '../../shared/toast';
 import { getAppEntitlement, canUsePaidFeatures, getWixPricingPageUrl, AppEntitlement } from '../../shared/entitlement';
 import { evaluateRuleAgainstPlan, canUseFixedDeposit, canUseCustomFrequency, FREE_PLAN_MAX_ACTIVE_RULES, FREE_PLAN_FIXED_FREQUENCY } from '../../shared/plan-limits';
 import { DepositRule, DepositType, DepositRuleScope, InstallmentFrequency } from '../../types';
-import { evaluateDepositPlan } from '../../backend/deposit-engine';
+import { evaluateDepositPlan } from '../../shared/deposit-engine';
 import { resolveEcommerceInstalled, WIX_ECOMMERCE_APP_MARKET_URL, type EcommerceInstallState } from '../../shared/ecommerce';
 import { deferredDiscountPercent } from '../../shared/cart-evaluation';
 import { depositTriggerName } from '../../shared/deposit-trigger-id';

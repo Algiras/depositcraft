@@ -1,5 +1,5 @@
 import { items } from '@wix/data';
-import { evaluateDepositPlan } from '../backend/deposit-engine';
+import { evaluateDepositPlan } from './deposit-engine';
 import type { CheckoutLineItem, DepositEvaluationResult, DepositRule } from '../types';
 import { listDepositRules } from './rules-store';
 import { getAppEntitlement, type GetAppEntitlementOptions } from './entitlement';

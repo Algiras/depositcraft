@@ -1,6 +1,6 @@
 import { orderPaymentRequests, orders } from '@wix/ecom';
 import { items } from '@wix/data';
-import { evaluateDepositPlan } from '../backend/deposit-engine';
+import { evaluateDepositPlan } from './deposit-engine';
 import { loadConfiguration } from './configuration';
 import { getAppEntitlement } from './entitlement';
 import { evaluateRuleAgainstPlan } from './plan-limits';
@@ -23,11 +23,17 @@ type DiagnosticEmitter = typeof emitDiagnostic;
 
 /**
  * `startPaymentPlanForOrder` and `syncPaymentPlanFromWix` are dashboard-only
- * (called with the merchant session), so their Wix Data/ecom calls stay
- * unelevated by default. `advancePaymentPlanForOrder` is also driven from the
- * backend billing scheduler (no merchant session), so it accepts an optional
- * `PaymentDataAccess` -- backend callers pass a fully `auth.elevate`d one;
- * dashboard callers omit it and get today's unelevated behavior.
+ * (reached only through the `Permissions.Admin` web methods in
+ * `src/backend/payment-plan.web.ts`, which run with the calling merchant's
+ * own session), so their Wix Data/ecom calls stay unelevated by default.
+ * `advancePaymentPlanForOrder` is reached both through that same web method
+ * (dashboard, unelevated) AND directly from the backend billing scheduler
+ * (`src/backend/installment-scheduler.ts`, no merchant session), so it
+ * accepts an optional `PaymentDataAccess` -- the scheduler passes a fully
+ * `auth.elevate`d one with `{ elevated: true }`; the web method omits it and
+ * gets today's unelevated behavior. This module itself is never imported by
+ * `src/dashboard/**` directly any more; only `payment-plan.web.ts` and
+ * `installment-scheduler.ts` import it.
  */
 export interface PaymentDataAccess {
   getItem: typeof items.get;

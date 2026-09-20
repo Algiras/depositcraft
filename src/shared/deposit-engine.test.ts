@@ -6,8 +6,8 @@ import {
   filterQualifyingItems,
   buildLayawaySchedule,
   evaluateDepositPlan,
-} from '../deposit-engine';
-import { DepositRule, CheckoutLineItem } from '../../types';
+} from './deposit-engine';
+import { DepositRule, CheckoutLineItem } from '../types';
 
 describe('DepositCraft Engine Tests', () => {
   describe('calculateSubtotal', () => {

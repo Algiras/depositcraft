@@ -6,7 +6,7 @@ import {
   LayawaySchedule,
   InstallmentScheduleItem,
 } from '../types';
-import { logger } from '../shared/logger';
+import { logger } from './logger';
 
 /**
  * Extracts product ID supporting both Catalog V1 (catalogItemId) and Catalog V3 (catalogReference).
