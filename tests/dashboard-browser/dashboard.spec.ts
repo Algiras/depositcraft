@@ -61,15 +61,18 @@ test('paid plan hides Pro Tier card and header upgrade button', async ({ page })
   await expect(page.getByText('Unlock unlimited deposit plans and custom schedules.')).toBeHidden();
 });
 
-test('actionable recovery UI renders when storage is provisioning and recovers on retry', async ({ page }) => {
+test('storage provisioning shows an auto-updating loader and recovers without a click', async ({ page }) => {
+  await page.clock.install();
   await page.goto('./?storage=fail');
-  await expect(page.getByText('still provisioning private storage')).toBeVisible();
-  const checkAgainButton = page.getByRole('button', { name: 'Check again' });
-  await expect(checkAgainButton).toBeVisible();
-  await expect(checkAgainButton).toBeEnabled();
 
-  await checkAgainButton.click();
-  await expect(page.getByText('still provisioning private storage')).toBeHidden();
+  // First-load auto-retry runs checks at 0/5/15/30s; the mock fails all four,
+  // so at ~31s the initial loader hands off to the provisioning loader.
+  await page.clock.runFor(31_000);
+  await expect(page.getByText('Setting up DepositCraft storage')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Check again' })).toHaveCount(0);
+
+  // The loader polls every 15s on its own; the 5th check succeeds.
+  await page.clock.runFor(21_000);
   await expect(page.getByRole('button', { name: '+ Create deposit plan' })).toBeEnabled();
   await expect(page.getByRole('table').getByText('Luxury Furniture Layaway Plan')).toBeVisible();
 });

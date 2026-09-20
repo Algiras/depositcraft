@@ -40,7 +40,6 @@
   "app.storage.hintCmsRequired": "Add Wix CMS from the App Market if your site does not have it, then update DepositCraft and click Retry.",
   "app.storage.hintDefault": "If this continues, contact support with your Wix request ID.",
   "app.storage.requestIdSuffix": "(Wix request ID: {requestId})",
-  "app.storage.checkAgain": "Check again",
   "app.dashboard.supportedTitle": "Supported",
   "app.dashboard.notSupportedTitle": "Not supported",
   "app.dashboard.supportedSummaryWithRule": "Layaway preview at cart/checkout; checkout deposits when you pair each active plan with an automatic discount using its DepositCraft custom trigger (for {ruleName}, about {percent} off when {triggerName} is active); installment payment links from Order Details; due-date Automations emails after you activate an automation for Installment due reminder (Automations → + New Automation → Send an email, timed to the due date).",
@@ -175,5 +174,6 @@
   "app.ledger.countPartial": "Showing {shown, plural, one {# payment} other {# payments}}. More are available.",
   "app.ledger.countComplete": "Showing all {shown, plural, one {# payment} other {# payments}}.",
   "app.ledger.loadMoreButton": "Load more",
-  "app.ledger.loadErrorToast": "DepositCraft could not load the payment ledger."
+  "app.ledger.loadErrorToast": "DepositCraft could not load the payment ledger.",
+  "app.storage.preparingBody": "Setting up DepositCraft storage — this usually finishes within a few minutes. This page updates automatically."
 }

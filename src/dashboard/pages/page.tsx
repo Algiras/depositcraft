@@ -165,6 +165,14 @@ function DepositCraftDashboard() {
   const [isCheckingStorage, setIsCheckingStorage] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  // Latest-value mirrors for the mount-effect's provisioning poll interval
+  // (its closure is created once; reading state directly would go stale).
+  const storageStateRef = useRef(storageState);
+  const storageReadyRef = useRef(storageReady);
+  const isInitialLoadingRef = useRef(isInitialLoading);
+  storageStateRef.current = storageState;
+  storageReadyRef.current = storageReady;
+  isInitialLoadingRef.current = isInitialLoading;
   const [instanceId, setInstanceId] = useState('');
   const [ecommerceInstalled, setEcommerceInstalled] = useState<EcommerceInstallState>(undefined);
   const [entitlement, setEntitlement] = useState<AppEntitlement>({
@@ -266,9 +274,19 @@ function DepositCraftDashboard() {
   useEffect(() => {
     markDashboardLoaded();
     (async () => {
-      await Promise.all([reloadStorage(false), Promise.resolve(refreshEntitlement())]);
+      // First load auto-retries provisioning states (5/10/15s) while the
+      // loader is showing, so slow propagation recovers without a click.
+      await Promise.all([reloadStorage(true), Promise.resolve(refreshEntitlement())]);
       setIsInitialLoading(false);
     })();
+    // The provisioning loader promises the page updates automatically: keep
+    // re-checking every 15s while that loader is on screen, stopping the
+    // moment storage turns ready or a recovery state takes over.
+    const visibleButNotReady = () => !storageReadyRef.current && !isInitialLoadingRef.current
+      && (storageStateRef.current === 'provisioning' || storageStateRef.current === 'timeout');
+    const interval = setInterval(() => {
+      if (visibleButNotReady()) void reloadStorage(false);
+    }, 15_000);
     void appInstances.getAppInstance().then(({
       instance,
       site
@@ -282,10 +300,10 @@ function DepositCraftDashboard() {
     window.addEventListener('focus', refreshEntitlement);
     document.addEventListener('visibilitychange', onVisible);
     return () => {
+      clearInterval(interval);
       window.removeEventListener('focus', refreshEntitlement);
       document.removeEventListener('visibilitychange', onVisible);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const isPaidPlan = canUsePaidFeatures(entitlement);
   const upgradeUrl = instanceId ? getWixPricingPageUrl(APP_ID, instanceId) : undefined;
@@ -502,7 +520,15 @@ function DepositCraftDashboard() {
                 <FormattedMessage id="app.dashboard.upgradeSuccessBanner" defaultMessage="Pro plan active. Unlimited deposit plans, custom schedules, and priority support are unlocked." />
               </SectionHelper>}
 
-            {!storageReady && !isInitialLoading && <Card>
+            {!storageReady && !isInitialLoading && (storageState === 'provisioning' || storageState === 'timeout'
+              ? <Card>
+                <Card.Content>
+                  <Box align="center" verticalAlign="middle" padding="60px 0">
+                    <Loader text={intl.formatMessage({ id: 'app.storage.preparingBody', defaultMessage: 'Setting up DepositCraft storage — this usually finishes within a few minutes. This page updates automatically.' })} />
+                  </Box>
+                </Card.Content>
+              </Card>
+              : <Card>
                 <Card.Content>
                   <Box align="space-between" verticalAlign="middle" gap="SP3">
                     <Box direction="vertical" gap="SP1">
@@ -513,13 +539,13 @@ function DepositCraftDashboard() {
                       {!isCheckingStorage && <Text size="tiny" secondary>{storageHintText}</Text>}
                     </Box>
                     <Box gap="SP2">
-                      <Button priority="secondary" onClick={() => void reloadStorage(storageState === 'provisioning' || storageState === 'timeout')}>
-                        {storageState === 'provisioning' || storageState === 'timeout' ? <FormattedMessage id="app.storage.checkAgain" defaultMessage="Check again" /> : <FormattedMessage id="app.common.retry" defaultMessage="Retry" />}
+                      <Button priority="secondary" onClick={() => void reloadStorage(false)}>
+                        <FormattedMessage id="app.common.retry" defaultMessage="Retry" />
                       </Button>
                     </Box>
                   </Box>
                 </Card.Content>
-              </Card>}
+              </Card>)}
 
             {storageReady && <SectionHelper skin="standard">
                 <Box direction="vertical" gap="SP2">

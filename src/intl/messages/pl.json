@@ -40,7 +40,6 @@
   "app.storage.hintCmsRequired": "Dodaj Wix CMS z App Market, jeśli Twoja witryna go nie ma, następnie zaktualizuj DepositCraft i kliknij „Spróbuj ponownie”.",
   "app.storage.hintDefault": "Jeśli problem będzie się powtarzał, skontaktuj się z pomocą techniczną, podając identyfikator żądania Wix.",
   "app.storage.requestIdSuffix": "(Identyfikator żądania Wix: {requestId})",
-  "app.storage.checkAgain": "Sprawdź ponownie",
   "app.dashboard.supportedTitle": "Obsługiwane",
   "app.dashboard.notSupportedTitle": "Nieobsługiwane",
   "app.dashboard.supportedSummaryWithRule": "Podgląd płatności odroczonej w koszyku/kasie; zaliczki w kasie, gdy każdy aktywny plan połączysz z automatycznym rabatem za pomocą jego wyzwalacza DepositCraft (dla {ruleName}, około {percent} rabatu, gdy {triggerName} jest aktywny); linki płatności za raty z widoku szczegółów zamówienia; e-maile Automations w dniu terminu płatności po aktywowaniu automatyzacji dla „Przypomnienia o terminie raty” (Automations → + Nowa automatyzacja → Wyślij e-mail, zaplanowany na termin płatności).",
@@ -175,5 +174,6 @@
   "app.ledger.countPartial": "Wyświetlono {shown, plural, one {# płatność} few {# płatności} many {# płatności} other {# płatności}}. Dostępne są kolejne.",
   "app.ledger.countComplete": "Wyświetlono wszystkie {shown, plural, one {# płatność} few {# płatności} many {# płatności} other {# płatności}}.",
   "app.ledger.loadMoreButton": "Wczytaj więcej",
-  "app.ledger.loadErrorToast": "DepositCraft nie mógł wczytać rejestru płatności."
+  "app.ledger.loadErrorToast": "DepositCraft nie mógł wczytać rejestru płatności.",
+  "app.storage.preparingBody": "Trwa konfigurowanie magazynu danych DepositCraft — zwykle kończy się to w ciągu kilku minut. Ta strona odświeży się automatycznie."
 }

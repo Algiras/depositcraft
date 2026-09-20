@@ -40,7 +40,6 @@
   "app.storage.hintCmsRequired": "Įdiekite Wix CMS iš App Market, jei jo neturite svetainėje, tada atnaujinkite DepositCraft ir spustelėkite „Bandyti dar kartą“.",
   "app.storage.hintDefault": "Jei tai kartojasi, susisiekite su pagalba ir nurodykite savo Wix užklausos ID.",
   "app.storage.requestIdSuffix": "(Wix užklausos ID: {requestId})",
-  "app.storage.checkAgain": "Tikrinti dar kartą",
   "app.dashboard.supportedTitle": "Palaikoma",
   "app.dashboard.notSupportedTitle": "Nepalaikoma",
   "app.dashboard.supportedSummaryWithRule": "Atidėto mokėjimo peržiūra prekių krepšelyje / apmokėjime; įnašai apmokėjime, kai kiekvieną aktyvų planą susiejate su automatine nuolaida per jo DepositCraft trigerį (planui {ruleName} apie {percent} nuolaida, kai {triggerName} aktyvus); dalinių įmokų mokėjimo nuorodos iš užsakymo informacijos; Automations el. laiškai suėjimo dieną, kai aktyvuojate automatizaciją „Priminimas apie mokėjimo terminą“ (Automations → + Nauja automatizacija → Siųsti el. laišką, suplanuotą suėjimo dienai).",
@@ -175,5 +174,6 @@
   "app.ledger.countPartial": "Rodoma {shown, plural, one {# mokėjimas} few {# mokėjimai} many {# mokėjimo} other {# mokėjimų}}. Yra daugiau.",
   "app.ledger.countComplete": "Rodomi visi {shown, plural, one {# mokėjimas} few {# mokėjimai} many {# mokėjimo} other {# mokėjimų}}.",
   "app.ledger.loadMoreButton": "Įkelti daugiau",
-  "app.ledger.loadErrorToast": "DepositCraft nepavyko įkelti mokėjimų registro."
+  "app.ledger.loadErrorToast": "DepositCraft nepavyko įkelti mokėjimų registro.",
+  "app.storage.preparingBody": "Konfigūruojama DepositCraft saugykla — tai paprastai užtrunka keletą minučių. Šis puslapis atsinaujins automatiškai."
 }

@@ -81,7 +81,10 @@ function wixServiceMocks(): Plugin {
         const params = new URLSearchParams(window.location.search);
         if (params.get('storage') === 'fail') {
           storageChecks += 1;
-          if (storageChecks === 1) {
+          // Fail long enough that first-load auto-retry (checks 1-4 over ~30s)
+          // exhausts and the provisioning loader takes over; the loader's own
+          // 15s poll then succeeds on check 5.
+          if (storageChecks <= 4) {
             return {
               ready: false,
               state: 'provisioning',

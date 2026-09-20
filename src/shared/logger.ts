@@ -11,6 +11,7 @@ export type DiagnosticEventName =
   | 'storage_write'
   | 'storage_init'
   | 'storage_verify'
+  | 'storage_install_verify'
   | 'configuration_load'
   | 'configuration_save'
   | 'plan_create'
@@ -42,6 +43,8 @@ export type DiagnosticInput = {
   wixRequestId?: string;
   surface?: 'dashboard' | 'order_slot' | 'backend' | 'spi' | 'backend_event';
   mode?: 'sample' | 'real';
+  /** Retry-loop attempts count (storage_install_verify). */
+  attempts?: number;
 };
 
 const APP_VERSION = '1.0.0';

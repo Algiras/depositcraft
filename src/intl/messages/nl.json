@@ -40,7 +40,6 @@
   "app.storage.hintCmsRequired": "Voeg Wix CMS toe via de App Market als uw site het niet heeft, update daarna DepositCraft en klik op “Opnieuw proberen”.",
   "app.storage.hintDefault": "Als dit blijft gebeuren, neem contact op met support en geef uw Wix-aanvraag-ID door.",
   "app.storage.requestIdSuffix": "(Wix-aanvraag-ID: {requestId})",
-  "app.storage.checkAgain": "Opnieuw controleren",
   "app.dashboard.supportedTitle": "Ondersteund",
   "app.dashboard.notSupportedTitle": "Niet ondersteund",
   "app.dashboard.supportedSummaryWithRule": "Voorbeeld van afbetaling in winkelwagen/checkout; aanbetalingen bij checkout wanneer u elk actief plan koppelt aan een automatische korting via de DepositCraft-trigger (voor {ruleName}, ongeveer {percent} korting wanneer {triggerName} actief is); betaallinks voor termijnen vanuit Bestelgegevens; Automations-e-mails op de vervaldatum nadat u een automatisering voor “Herinnering vervallen termijn” hebt geactiveerd (Automations → + Nieuwe automatisering → E-mail verzenden, getimed op de vervaldatum).",
@@ -175,5 +174,6 @@
   "app.ledger.countPartial": "{shown, plural, one {# betaling} other {# betalingen}} weergegeven. Er zijn meer beschikbaar.",
   "app.ledger.countComplete": "Alle {shown, plural, one {# betaling} other {# betalingen}} weergegeven.",
   "app.ledger.loadMoreButton": "Meer laden",
-  "app.ledger.loadErrorToast": "DepositCraft kon het betalingsregister niet laden."
+  "app.ledger.loadErrorToast": "DepositCraft kon het betalingsregister niet laden.",
+  "app.storage.preparingBody": "DepositCraft-opslag wordt ingesteld — dit duurt meestal enkele minuten. Deze pagina werkt zich automatisch bij."
 }

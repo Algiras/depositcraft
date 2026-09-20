@@ -40,7 +40,6 @@
   "app.storage.hintCmsRequired": "Fügen Sie Wix CMS über den App Market hinzu, falls Ihre Website es nicht hat, aktualisieren Sie dann DepositCraft und klicken Sie auf „Wiederholen“.",
   "app.storage.hintDefault": "Falls das Problem weiterhin besteht, kontaktieren Sie den Support mit Ihrer Wix-Anfrage-ID.",
   "app.storage.requestIdSuffix": "(Wix-Anfrage-ID: {requestId})",
-  "app.storage.checkAgain": "Erneut prüfen",
   "app.dashboard.supportedTitle": "Unterstützt",
   "app.dashboard.notSupportedTitle": "Nicht unterstützt",
   "app.dashboard.supportedSummaryWithRule": "Layaway-Vorschau im Warenkorb/Checkout; Anzahlungen im Checkout, wenn Sie jeden aktiven Plan mit einem automatischen Rabatt über seinen DepositCraft-Trigger verknüpfen (für {ruleName} etwa {percent} Rabatt, wenn {triggerName} aktiv ist); Zahlungslinks für Raten aus den Bestelldetails; Automations-E-Mails zum Fälligkeitsdatum, nachdem Sie eine Automatisierung für „Ratenfälligkeit“ aktiviert haben (Automations → + Neue Automatisierung → E-Mail senden, zeitlich auf das Fälligkeitsdatum abgestimmt).",
@@ -175,5 +174,6 @@
   "app.ledger.countPartial": "{shown, plural, one {# Zahlung} other {# Zahlungen}} werden angezeigt. Es sind weitere verfügbar.",
   "app.ledger.countComplete": "Alle {shown, plural, one {# Zahlung} other {# Zahlungen}} werden angezeigt.",
   "app.ledger.loadMoreButton": "Mehr laden",
-  "app.ledger.loadErrorToast": "DepositCraft konnte das Zahlungsjournal nicht laden."
+  "app.ledger.loadErrorToast": "DepositCraft konnte das Zahlungsjournal nicht laden.",
+  "app.storage.preparingBody": "DepositCraft-Speicher wird eingerichtet – das dauert in der Regel nur wenige Minuten. Diese Seite aktualisiert sich automatisch."
 }

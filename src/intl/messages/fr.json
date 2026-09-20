@@ -40,7 +40,6 @@
   "app.storage.hintCmsRequired": "Ajoutez Wix CMS depuis l’App Market si votre site ne l’a pas, puis mettez à jour DepositCraft et cliquez sur « Réessayer ».",
   "app.storage.hintDefault": "Si le problème persiste, contactez le support avec votre ID de requête Wix.",
   "app.storage.requestIdSuffix": "(ID de requête Wix : {requestId})",
-  "app.storage.checkAgain": "Vérifier à nouveau",
   "app.dashboard.supportedTitle": "Pris en charge",
   "app.dashboard.notSupportedTitle": "Non pris en charge",
   "app.dashboard.supportedSummaryWithRule": "Aperçu du paiement échelonné dans le panier/le paiement ; acomptes au paiement lorsque vous associez chaque plan actif à une remise automatique via son déclencheur DepositCraft (pour {ruleName}, environ {percent} de réduction lorsque {triggerName} est actif) ; liens de paiement des échéances depuis les détails de la commande ; e-mails Automations à la date d’échéance après avoir activé une automatisation pour « Rappel d’échéance » (Automations → + Nouvelle automatisation → Envoyer un e-mail, programmé selon la date d’échéance).",
@@ -175,5 +174,6 @@
   "app.ledger.countPartial": "{shown, plural, one {# paiement affiché} other {# paiements affichés}}. D’autres sont disponibles.",
   "app.ledger.countComplete": "{shown, plural, one {# paiement affiché} other {# paiements affichés}} au total.",
   "app.ledger.loadMoreButton": "Charger plus",
-  "app.ledger.loadErrorToast": "DepositCraft n’a pas pu charger le registre des paiements."
+  "app.ledger.loadErrorToast": "DepositCraft n’a pas pu charger le registre des paiements.",
+  "app.storage.preparingBody": "Configuration du stockage DepositCraft — cela se termine généralement en quelques minutes. Cette page se met à jour automatiquement."
 }

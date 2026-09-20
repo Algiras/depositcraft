@@ -40,7 +40,6 @@
   "app.storage.hintCmsRequired": "Aggiungi Wix CMS dall’App Market se il tuo sito non lo ha, poi aggiorna DepositCraft e fai clic su “Riprova”.",
   "app.storage.hintDefault": "Se il problema persiste, contatta il supporto indicando il tuo ID richiesta Wix.",
   "app.storage.requestIdSuffix": "(ID richiesta Wix: {requestId})",
-  "app.storage.checkAgain": "Controlla di nuovo",
   "app.dashboard.supportedTitle": "Supportato",
   "app.dashboard.notSupportedTitle": "Non supportato",
   "app.dashboard.supportedSummaryWithRule": "Anteprima del pagamento a rate nel carrello/checkout; acconti al checkout quando associ ogni piano attivo a uno sconto automatico tramite il suo trigger DepositCraft (per {ruleName}, circa {percent} di sconto quando {triggerName} è attivo); link di pagamento delle rate dai dettagli dell’ordine; email di Automations alla data di scadenza dopo aver attivato un’automazione per “Promemoria scadenza rata” (Automations → + Nuova automazione → Invia un’email, programmata in base alla data di scadenza).",
@@ -175,5 +174,6 @@
   "app.ledger.countPartial": "{shown, plural, one {# pagamento mostrato} other {# pagamenti mostrati}}. Altri sono disponibili.",
   "app.ledger.countComplete": "{shown, plural, one {# pagamento mostrato} other {# pagamenti mostrati}} in totale.",
   "app.ledger.loadMoreButton": "Carica altri",
-  "app.ledger.loadErrorToast": "DepositCraft non è riuscito a caricare il registro dei pagamenti."
+  "app.ledger.loadErrorToast": "DepositCraft non è riuscito a caricare il registro dei pagamenti.",
+  "app.storage.preparingBody": "Configurazione dello spazio di archiviazione di DepositCraft: di solito termina in pochi minuti. Questa pagina si aggiorna automaticamente."
 }

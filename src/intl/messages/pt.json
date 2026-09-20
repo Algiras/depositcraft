@@ -40,7 +40,6 @@
   "app.storage.hintCmsRequired": "Adicione o Wix CMS a partir do App Market se o seu site não o tiver, depois atualize o DepositCraft e clique em “Tentar novamente”.",
   "app.storage.hintDefault": "Se isto continuar, contacte o suporte com o seu ID de pedido Wix.",
   "app.storage.requestIdSuffix": "(ID de pedido Wix: {requestId})",
-  "app.storage.checkAgain": "Verificar novamente",
   "app.dashboard.supportedTitle": "Suportado",
   "app.dashboard.notSupportedTitle": "Não suportado",
   "app.dashboard.supportedSummaryWithRule": "Pré-visualização do pagamento a prestações no carrinho/checkout; depósitos no checkout quando associa cada plano ativo a um desconto automático através do seu acionador do DepositCraft (para {ruleName}, cerca de {percent} de desconto quando {triggerName} está ativo); links de pagamento de prestações a partir dos detalhes da encomenda; e-mails de Automations na data de vencimento após ativar uma automação para “Lembrete de prestação a vencer” (Automations → + Nova automação → Enviar um e-mail, programado para a data de vencimento).",
@@ -175,5 +174,6 @@
   "app.ledger.countPartial": "A mostrar {shown, plural, one {# pagamento} other {# pagamentos}}. Existem mais disponíveis.",
   "app.ledger.countComplete": "A mostrar {shown, plural, one {# pagamento} other {# pagamentos}} no total.",
   "app.ledger.loadMoreButton": "Carregar mais",
-  "app.ledger.loadErrorToast": "O DepositCraft não conseguiu carregar o registo de pagamentos."
+  "app.ledger.loadErrorToast": "O DepositCraft não conseguiu carregar o registo de pagamentos.",
+  "app.storage.preparingBody": "A configurar o armazenamento do DepositCraft — normalmente termina em poucos minutos. Esta página é atualizada automaticamente."
 }
