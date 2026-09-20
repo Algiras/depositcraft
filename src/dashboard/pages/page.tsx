@@ -92,7 +92,7 @@ function storageMessageId(state: StorageSetupState | null): string {
 function storageMessageDefault(state: StorageSetupState | null): string {
   if (state === 'cms_required') return 'Add Wix CMS to this site, update this app to the latest version, then click Retry.';
   if (state === 'schema_mismatch') return 'DepositCraft storage on this site does not match the latest app version. Open Manage Apps, update DepositCraft to the latest version, then click Retry.';
-  if (state === 'provisioning' || state === 'timeout') return 'DepositCraft is still provisioning private storage after install or update. This usually finishes within 10–15 minutes — click Check again or keep this page open.';
+  if (state === 'provisioning' || state === 'timeout') return 'DepositCraft is still provisioning private storage after install or update. This usually finishes within 5 minutes — click Check again or keep this page open.';
   return 'We could not confirm storage is set up. Keep this page open and try again, or contact support if this continues.';
 }
 function storageHintId(state: StorageSetupState | null): string {

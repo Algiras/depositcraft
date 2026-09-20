@@ -33,7 +33,7 @@
   "app.dashboard.upgradeSuccessToast": "Pro-abonnement actief. Onbeperkte plannen en aangepaste schema’s ontgrendeld.",
   "app.storage.badge": "Instellen vereist",
   "app.storage.checking": "Er wordt gecontroleerd of uw opslag is ingesteld…",
-  "app.storage.provisioning": "DepositCraft is na installatie of update nog steeds privéopslag aan het inrichten. Dit duurt meestal 10-15 minuten. Klik op “Opnieuw controleren” of laat deze pagina open staan.",
+  "app.storage.provisioning": "DepositCraft is na installatie of update nog steeds privéopslag aan het inrichten. Dit duurt meestal 5 minuten. Klik op “Opnieuw controleren” of laat deze pagina open staan.",
   "app.storage.cmsRequired": "Voeg Wix CMS toe aan deze site, update deze app naar de nieuwste versie en klik daarna op “Opnieuw proberen”.",
   "app.storage.schemaMismatch": "De DepositCraft-opslag op deze site komt niet overeen met de nieuwste app-versie. Open Apps beheren, update DepositCraft naar de nieuwste versie en klik daarna op “Opnieuw proberen”.",
   "app.storage.error": "We konden niet bevestigen dat de opslag is ingesteld. Laat deze pagina open en probeer het opnieuw, of neem contact op met support als het probleem blijft bestaan.",

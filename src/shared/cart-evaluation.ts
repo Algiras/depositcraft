@@ -61,14 +61,39 @@ export async function evaluateCartDepositPlans(
   return { evaluation, enabled };
 }
 
+/**
+ * A single `triggers[i]` entry from the `getEligibleTriggers` SPI request. See
+ * https://dev.wix.com/docs/api-reference/business-solutions/e-commerce/extensions/discounts/custom-discount-triggers-integration-service-plugin/get-eligible-triggers.md
+ * The `identifier` here is request-scoped and opaque to us: Wix uses it to
+ * correlate our response back to the trigger it asked about, so it must be
+ * echoed verbatim in the matching `eligibleTriggers[i].identifier` — it is
+ * NOT our own rule id.
+ */
+export type RequestedTrigger = {
+  customTrigger?: { _id?: string | null } | null;
+  identifier?: string | null;
+};
+
+/**
+ * Per the SPI contract, `eligibleTriggers[i].identifier` must equal the
+ * `identifier` of the *requested* `triggers[i]` entry we matched (joined via
+ * `customTriggerId`/`customTrigger._id`), not our internal rule id. We only
+ * return a trigger Wix actually asked about: an eligible rule that wasn't in
+ * `requestedTriggers`, or a requested trigger whose `customTrigger._id` we
+ * don't recognize, both yield no entry.
+ */
 export function eligibleDepositTriggers(
   enabled: DepositRule[],
   evaluation: DepositEvaluationResult,
+  requestedTriggers: ReadonlyArray<RequestedTrigger> | undefined,
 ): Array<{ customTriggerId: string; identifier: string }> {
   if (!evaluation.eligible || !evaluation.ruleId || evaluation.remainingBalance <= 0) return [];
   const rule = enabled.find(candidate => candidate.id === evaluation.ruleId);
   if (!rule) return [];
-  return [{ customTriggerId: depositTriggerId(rule.id), identifier: rule.id }];
+  const customTriggerId = depositTriggerId(rule.id);
+  const requested = (requestedTriggers ?? []).find(trigger => trigger.customTrigger?._id === customTriggerId);
+  if (!requested?.identifier) return [];
+  return [{ customTriggerId, identifier: requested.identifier }];
 }
 
 export function checkoutDepositMessage(evaluation: DepositEvaluationResult): string {

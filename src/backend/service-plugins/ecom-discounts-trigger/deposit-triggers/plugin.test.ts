@@ -57,6 +57,37 @@ describe('deposit-triggers discounts-trigger SPI failure policy', () => {
     expect(response).toEqual({ eligibleTriggers: [{ customTriggerId: 'x', identifier: 'y' }] });
   });
 
+  it('forwards the request-scoped triggers to eligibleDepositTriggers so the response echoes the caller identifier, not our rule id', async () => {
+    // Shape lifted from the docs' sample `getEligibleTriggers` request.
+    const requestedTriggers = [
+      { customTrigger: { _id: 'depositcraft-deposit-1' }, identifier: '123' },
+      { customTrigger: { _id: 'my-happy-hour-trigger' }, identifier: '234' },
+    ];
+    const evaluation = { eligible: true, ruleId: 'deposit-1', remainingBalance: 75 };
+    cartEvaluation.evaluateCartDepositPlans.mockResolvedValue({ evaluation, enabled: [{ id: 'deposit-1' }] });
+    cartEvaluation.eligibleDepositTriggers.mockReturnValue([{ customTriggerId: 'depositcraft-deposit-1', identifier: '123' }]);
+
+    const response = await handleEligibleTriggers({ request: { triggers: requestedTriggers }, metadata: {} } as any);
+
+    expect(cartEvaluation.eligibleDepositTriggers).toHaveBeenCalledWith(
+      [{ id: 'deposit-1' }],
+      evaluation,
+      requestedTriggers,
+    );
+    // The requested identifier ('123'), not our internal rule id ('deposit-1'), must come back.
+    expect(response).toEqual({ eligibleTriggers: [{ customTriggerId: 'depositcraft-deposit-1', identifier: '123' }] });
+  });
+
+  it('handles a request with no triggers to filter by (undefined `request.triggers`)', async () => {
+    cartEvaluation.evaluateCartDepositPlans.mockResolvedValue({ evaluation: {}, enabled: [] });
+    cartEvaluation.eligibleDepositTriggers.mockReturnValue([]);
+
+    const response = await handleEligibleTriggers({ request: {}, metadata: {} } as any);
+
+    expect(cartEvaluation.eligibleDepositTriggers).toHaveBeenCalledWith([], {}, undefined);
+    expect(response).toEqual({ eligibleTriggers: [] });
+  });
+
   it('fails open (no eligible triggers) rather than propagating an error to the shopper, and emits a failure diagnostic', async () => {
     cartEvaluation.evaluateCartDepositPlans.mockRejectedValue(new Error('elevation/auth failure'));
 

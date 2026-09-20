@@ -33,7 +33,7 @@
   "app.dashboard.upgradeSuccessToast": "Pro planas aktyvus. Atrakinti neriboti planai ir pasirinktiniai grafikai.",
   "app.storage.badge": "Reikalinga sąranka",
   "app.storage.checking": "Tikrinama, ar jūsų saugykla sukonfigūruota…",
-  "app.storage.provisioning": "DepositCraft po diegimo ar atnaujinimo dar rengia privačią saugyklą. Tai dažniausiai užtrunka 10–15 minučių – spustelėkite „Tikrinti dar kartą“ arba palikite šį puslapį atidarytą.",
+  "app.storage.provisioning": "DepositCraft po diegimo ar atnaujinimo dar rengia privačią saugyklą. Tai dažniausiai užtrunka 5 minučių – spustelėkite „Tikrinti dar kartą“ arba palikite šį puslapį atidarytą.",
   "app.storage.cmsRequired": "Įdiekite Wix CMS šioje svetainėje, atnaujinkite šią programą į naujausią versiją, tada spustelėkite „Bandyti dar kartą“.",
   "app.storage.schemaMismatch": "DepositCraft saugykla šioje svetainėje neatitinka naujausios programos versijos. Atidarykite „Valdyti programas“, atnaujinkite DepositCraft į naujausią versiją, tada spustelėkite „Bandyti dar kartą“.",
   "app.storage.error": "Nepavyko patvirtinti, kad saugykla sukonfigūruota. Palikite šį puslapį atidarytą ir bandykite dar kartą arba susisiekite su pagalba, jei problema nesibaigia.",

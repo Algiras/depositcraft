@@ -33,7 +33,7 @@
   "app.dashboard.upgradeSuccessToast": "Piano Pro attivo. Piani illimitati e pianificazioni personalizzate sbloccati.",
   "app.storage.badge": "Configurazione necessaria",
   "app.storage.checking": "Verifica se lo spazio di archiviazione è configurato…",
-  "app.storage.provisioning": "DepositCraft sta ancora effettuando il provisioning dello spazio di archiviazione privato dopo l’installazione o l’aggiornamento. Di solito richiede 10-15 minuti: fai clic su “Controlla di nuovo” o lascia aperta questa pagina.",
+  "app.storage.provisioning": "DepositCraft sta ancora effettuando il provisioning dello spazio di archiviazione privato dopo l’installazione o l’aggiornamento. Di solito richiede 5 minuti: fai clic su “Controlla di nuovo” o lascia aperta questa pagina.",
   "app.storage.cmsRequired": "Aggiungi Wix CMS a questo sito, aggiorna questa app all’ultima versione, poi fai clic su “Riprova”.",
   "app.storage.schemaMismatch": "Lo spazio di archiviazione di DepositCraft su questo sito non corrisponde all’ultima versione dell’app. Apri Gestisci app, aggiorna DepositCraft all’ultima versione, poi fai clic su “Riprova”.",
   "app.storage.error": "Non siamo riusciti a confermare che lo spazio di archiviazione sia configurato. Lascia aperta questa pagina e riprova, oppure contatta il supporto se il problema persiste.",

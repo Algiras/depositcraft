@@ -33,7 +33,7 @@
   "app.dashboard.upgradeSuccessToast": "Pro plan active. Unlimited plans and custom schedules are unlocked.",
   "app.storage.badge": "Setup needed",
   "app.storage.checking": "Checking whether your storage is set up…",
-  "app.storage.provisioning": "DepositCraft is still provisioning private storage after install or update. This usually finishes within 10–15 minutes — click Check again or keep this page open.",
+  "app.storage.provisioning": "DepositCraft is still provisioning private storage after install or update. This usually finishes within 5 minutes — click Check again or keep this page open.",
   "app.storage.cmsRequired": "Add Wix CMS to this site, update this app to the latest version, then click Retry.",
   "app.storage.schemaMismatch": "DepositCraft storage on this site does not match the latest app version. Open Manage Apps, update DepositCraft to the latest version, then click Retry.",
   "app.storage.error": "We could not confirm storage is set up. Keep this page open and try again, or contact support if this continues.",

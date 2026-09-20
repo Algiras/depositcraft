@@ -69,8 +69,10 @@ export async function assessConfigurationStorage(
   }
 }
 
+/** Mirrors core's provisioningMessage wording; see the note there on why the
+ *  figure is 5 minutes (the only number Wix documents) and not an invented range. */
 function provisioningTimeoutMessage(): string {
-  return `${APP_NAME} is still provisioning private storage after install or update. This usually finishes within 10–15 minutes — click Check again or keep this page open.`;
+  return `${APP_NAME} is still provisioning private storage after install or update. This usually finishes within 5 minutes — click Check again or keep this page open.`;
 }
 
 export async function verifyConfigurationStorage(

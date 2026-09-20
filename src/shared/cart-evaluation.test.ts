@@ -31,20 +31,42 @@ it('calculates deferred discount percent for checkout pairing', () => {
   expect(deferredDiscountPercent(evaluation)).toBe(75);
 });
 
-it('returns discount trigger ids only when a balance remains', () => {
-  const evaluation = {
-    eligible: true,
-    ruleId: 'plan-25',
-    ruleName: '25% Layaway',
-    orderSubtotal: 100,
-    qualifyingSubtotal: 100,
-    depositDueNow: 25,
-    remainingBalance: 75,
-    breakdownReasons: [],
-  };
-  expect(eligibleDepositTriggers([rule], evaluation)).toEqual([
-    { customTriggerId: 'depositcraft-plan-25', identifier: 'plan-25' },
+const eligibleEvaluation = {
+  eligible: true,
+  ruleId: 'plan-25',
+  ruleName: '25% Layaway',
+  orderSubtotal: 100,
+  qualifyingSubtotal: 100,
+  depositDueNow: 25,
+  remainingBalance: 75,
+  breakdownReasons: [],
+};
+
+it('echoes the REQUEST-scoped identifier, not our own rule id, per the SPI contract', () => {
+  // Shape lifted from the docs' sample `getEligibleTriggers` request:
+  // https://dev.wix.com/docs/.../custom-discount-triggers-integration-service-plugin/get-eligible-triggers.md
+  const requestedTriggers = [
+    { customTrigger: { _id: 'depositcraft-plan-25' }, identifier: '123' },
+    { customTrigger: { _id: 'my-happy-hour-trigger' }, identifier: '234' },
+  ];
+  expect(eligibleDepositTriggers([rule], eligibleEvaluation, requestedTriggers)).toEqual([
+    { customTriggerId: 'depositcraft-plan-25', identifier: '123' },
   ]);
+});
+
+it('omits an eligible rule that Wix did not ask about', () => {
+  const requestedTriggers = [{ customTrigger: { _id: 'my-happy-hour-trigger' }, identifier: '234' }];
+  expect(eligibleDepositTriggers([rule], eligibleEvaluation, requestedTriggers)).toEqual([]);
+});
+
+it('omits a requested trigger whose customTrigger id we do not recognize', () => {
+  const requestedTriggers = [{ customTrigger: { _id: 'some-other-apps-trigger' }, identifier: '999' }];
+  expect(eligibleDepositTriggers([rule], eligibleEvaluation, requestedTriggers)).toEqual([]);
+});
+
+it('returns nothing when the request has no triggers to filter by', () => {
+  expect(eligibleDepositTriggers([rule], eligibleEvaluation, undefined)).toEqual([]);
+  expect(eligibleDepositTriggers([rule], eligibleEvaluation, [])).toEqual([]);
 });
 
 it('explains checkout deposit pairing in shopper-facing copy', () => {

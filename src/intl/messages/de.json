@@ -33,7 +33,7 @@
   "app.dashboard.upgradeSuccessToast": "Pro-Tarif aktiv. Unbegrenzte Pläne und individuelle Zeitpläne sind freigeschaltet.",
   "app.storage.badge": "Einrichtung erforderlich",
   "app.storage.checking": "Es wird geprüft, ob Ihr Speicher eingerichtet ist…",
-  "app.storage.provisioning": "DepositCraft richtet nach der Installation oder Aktualisierung noch den privaten Speicher ein. Dies dauert in der Regel 10–15 Minuten – klicken Sie auf „Erneut prüfen“ oder lassen Sie diese Seite geöffnet.",
+  "app.storage.provisioning": "DepositCraft richtet nach der Installation oder Aktualisierung noch den privaten Speicher ein. Dies dauert in der Regel 5 Minuten – klicken Sie auf „Erneut prüfen“ oder lassen Sie diese Seite geöffnet.",
   "app.storage.cmsRequired": "Fügen Sie dieser Website Wix CMS hinzu, aktualisieren Sie diese App auf die neueste Version und klicken Sie dann auf „Wiederholen“.",
   "app.storage.schemaMismatch": "Der DepositCraft-Speicher auf dieser Website entspricht nicht der neuesten App-Version. Öffnen Sie „Apps verwalten“, aktualisieren Sie DepositCraft auf die neueste Version und klicken Sie dann auf „Wiederholen“.",
   "app.storage.error": "Wir konnten nicht bestätigen, dass der Speicher eingerichtet ist. Lassen Sie diese Seite geöffnet und versuchen Sie es erneut, oder kontaktieren Sie den Support, falls das Problem weiterhin besteht.",

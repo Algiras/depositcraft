@@ -33,7 +33,7 @@
   "app.dashboard.upgradeSuccessToast": "Plan Pro aktywny. Odblokowano nieograniczoną liczbę planów i niestandardowe harmonogramy.",
   "app.storage.badge": "Wymagana konfiguracja",
   "app.storage.checking": "Sprawdzanie, czy pamięć została skonfigurowana…",
-  "app.storage.provisioning": "DepositCraft wciąż przydziela prywatną pamięć po instalacji lub aktualizacji. Zwykle trwa to 10–15 minut — kliknij „Sprawdź ponownie” lub pozostaw tę stronę otwartą.",
+  "app.storage.provisioning": "DepositCraft wciąż przydziela prywatną pamięć po instalacji lub aktualizacji. Zwykle trwa to 5 minut — kliknij „Sprawdź ponownie” lub pozostaw tę stronę otwartą.",
   "app.storage.cmsRequired": "Dodaj Wix CMS do tej witryny, zaktualizuj tę aplikację do najnowszej wersji, a następnie kliknij „Spróbuj ponownie”.",
   "app.storage.schemaMismatch": "Pamięć DepositCraft w tej witrynie nie odpowiada najnowszej wersji aplikacji. Otwórz Zarządzanie aplikacjami, zaktualizuj DepositCraft do najnowszej wersji, a następnie kliknij „Spróbuj ponownie”.",
   "app.storage.error": "Nie mogliśmy potwierdzić, że pamięć jest skonfigurowana. Pozostaw tę stronę otwartą i spróbuj ponownie lub skontaktuj się z pomocą techniczną, jeśli problem nie ustąpi.",
