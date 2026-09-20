@@ -1,11 +1,6 @@
-export type StorageSetupState =
-  | 'ready'
-  | 'provisioning'
-  | 'cms_required'
-  | 'permission'
-  | 'schema_mismatch'
-  | 'timeout'
-  | 'error';
+import type { StorageState } from '@wix-extensions/core/storage';
+
+export type StorageSetupState = StorageState;
 
 export type StorageCheckItem = {
   id: string;

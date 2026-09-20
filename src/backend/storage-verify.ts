@@ -11,7 +11,7 @@ import type { StorageReadinessAssessment } from '../shared/storage-readiness';
  */
 export async function assessStorageElevated(): Promise<StorageReadinessAssessment> {
   return assessStorageRequirements(
-    (id) => auth.elevate(collections.getDataCollection)(id, { consistentRead: true }),
+    (id: string) => auth.elevate(collections.getDataCollection)(id, { consistentRead: true }),
     'DepositCraft',
   );
 }

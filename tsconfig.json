@@ -2,12 +2,16 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "jsx": "react",
     "strict": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "paths": {
+      "@wix-extensions/core": ["../../packages/core/src"],
+      "@wix-extensions/core/*": ["../../packages/core/src/*"]
+    }
   },
   "include": [
     "src"

@@ -17,12 +17,12 @@ const readers = (
 
 describe('assessStorageRequirements', () => {
   it('reports ready when every collection matches shape and permissions', async () => {
-    const result = await readers(async id => matchingCollection(id));
+    const result = await readers(async (id: string) => matchingCollection(id));
     expect(result).toMatchObject({ ready: true, state: 'ready' });
   });
 
   it('accepts dataPermissions when present on collection', async () => {
-    const result = await readers(async id => ({
+    const result = await readers(async (id: string) => ({
       ...matchingCollection(id),
       dataPermissions: matchingPermissions(),
     }));
@@ -39,13 +39,13 @@ describe('assessStorageRequirements', () => {
   });
 
   it('classifies wrong field shape as schema_mismatch with update guidance', async () => {
-    const result = await readers(async id => ({ ...matchingCollection(id), displayField: 'payload' }));
+    const result = await readers(async (id: string) => ({ ...matchingCollection(id), displayField: 'payload' }));
     expect(result).toMatchObject({ ready: false, state: 'schema_mismatch' });
     expect(result.message).toContain('update');
   });
 
   it('classifies non-privileged item permissions as schema_mismatch', async () => {
-    const result = await readers(async id => ({
+    const result = await readers(async (id: string) => ({
       ...matchingCollection(id),
       dataPermissions: { itemRead: 'PUBLIC' },
     }));

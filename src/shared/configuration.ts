@@ -17,7 +17,7 @@ export async function assessConfigurationStorage(): Promise<StorageReadinessAsse
   try {
     const assessment = await withStorageTimeout(() =>
       assessStorageRequirements(
-        (id) => collections.getDataCollection(id, { consistentRead: true }),
+        (id: string) => collections.getDataCollection(id, { consistentRead: true }),
         APP_NAME,
       ));
     if (!assessment.ready) {

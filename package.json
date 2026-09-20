@@ -13,6 +13,7 @@
     "@wix/ecom": "^1.0.2498",
     "@wix/essentials": "^1.0.15",
     "@wix/wix-ui-icons-common": "^3.0.0",
+    "@wix-extensions/core": "file:../../packages/core",
     "react-intl": "^6.8.4"
   },
   "devDependencies": {
