@@ -1,5 +1,5 @@
 import { auth } from '@wix/essentials';
-import { collections, permissions } from '@wix/data';
+import { collections } from '@wix/data';
 import { emitDiagnostic } from '../shared/logger';
 import { assessStorageRequirements } from '../shared/storage-shape';
 import type { StorageReadinessAssessment } from '../shared/storage-readiness';
@@ -12,7 +12,6 @@ import type { StorageReadinessAssessment } from '../shared/storage-readiness';
 export async function assessStorageElevated(): Promise<StorageReadinessAssessment> {
   return assessStorageRequirements(
     (id) => auth.elevate(collections.getDataCollection)(id, { consistentRead: true }),
-    (id) => auth.elevate(permissions.getPermissions)(id) as Promise<Record<string, string>>,
     'DepositCraft',
   );
 }

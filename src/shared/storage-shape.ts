@@ -21,8 +21,6 @@ export type StorageCollectionShape = {
   dataPermissions?: unknown;
 };
 export type CollectionMetadataReader = (id: string) => Promise<StorageCollectionShape>;
-export type CollectionPermissions = unknown;
-export type CollectionPermissionsReader = (id: string) => Promise<CollectionPermissions>;
 
 function hasRequiredCollectionShape(collection: StorageCollectionShape, requirement: StorageCollectionRequirement) {
   const fields = collection.fields ?? [];
@@ -56,7 +54,6 @@ function unwrapDataPermissions(response: unknown): Record<string, string> | unde
 
 export function assessStorageRequirements(
   readCollection: CollectionMetadataReader,
-  readPermissions: CollectionPermissionsReader,
   appName: string,
 ): Promise<StorageReadinessAssessment> {
   return (async () => {
@@ -68,16 +65,7 @@ export function assessStorageRequirements(
       const collectionName = requirement.id.split('/').pop() || requirement.id;
       try {
         const collection = await readCollection(requirement.id);
-        let dataPermissions = unwrapDataPermissions(collection.dataPermissions ?? collection.permissions);
-        if (!dataPermissions && readPermissions) {
-          try {
-            dataPermissions = unwrapDataPermissions(await readPermissions(requirement.id));
-          } catch {
-            // DataPermissionsService requires WIX_DATA.PERMISSIONS_READ. When denied,
-            // the successful readCollection confirms the collection exists.
-            dataPermissions = undefined;
-          }
-        }
+        const dataPermissions = unwrapDataPermissions(collection.dataPermissions ?? collection.permissions);
         const shapeValid = hasRequiredCollectionShape(collection, requirement);
         const missingPerms = findMissingPermissions(dataPermissions, requirement);
         const privileged = missingPerms.length === 0 && hasPrivilegedAccess(dataPermissions, requirement);

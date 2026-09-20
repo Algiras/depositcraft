@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assessStorageRequirements, type CollectionMetadataReader, type CollectionPermissionsReader } from './storage-shape';
+import { assessStorageRequirements, type CollectionMetadataReader } from './storage-shape';
 import { DEPOSITCRAFT_STORAGE_REQUIREMENTS } from './storage-collections';
 
 function matchingCollection(id: string) {
@@ -13,8 +13,7 @@ const matchingPermissions = () => ({
 
 const readers = (
   collectionImpl: CollectionMetadataReader,
-  permissionsImpl: CollectionPermissionsReader = async () => matchingPermissions(),
-) => assessStorageRequirements(collectionImpl, permissionsImpl, 'DepositCraft');
+) => assessStorageRequirements(collectionImpl, 'DepositCraft');
 
 describe('assessStorageRequirements', () => {
   it('reports ready when every collection matches shape and permissions', async () => {
@@ -22,11 +21,11 @@ describe('assessStorageRequirements', () => {
     expect(result).toMatchObject({ ready: true, state: 'ready' });
   });
 
-  it('accepts the Wix getPermissions response envelope', async () => {
-    const result = await readers(
-      async id => matchingCollection(id),
-      async () => ({ dataPermissions: matchingPermissions() }),
-    );
+  it('accepts dataPermissions when present on collection', async () => {
+    const result = await readers(async id => ({
+      ...matchingCollection(id),
+      dataPermissions: matchingPermissions(),
+    }));
     expect(result).toMatchObject({ ready: true, state: 'ready' });
   });
 
@@ -46,7 +45,10 @@ describe('assessStorageRequirements', () => {
   });
 
   it('classifies non-privileged item permissions as schema_mismatch', async () => {
-    const result = await readers(async id => matchingCollection(id), async () => ({ itemRead: 'PUBLIC' }));
+    const result = await readers(async id => ({
+      ...matchingCollection(id),
+      dataPermissions: { itemRead: 'PUBLIC' },
+    }));
     expect(result).toMatchObject({ ready: false, state: 'schema_mismatch' });
   });
 

@@ -26,18 +26,10 @@ vi.mock('@wix/data', () => ({
       fields: [{ key: 'title', type: 'TEXT' }, { key: 'payload', type: 'OBJECT' }],
     })),
   },
-  permissions: {
-    getPermissions: vi.fn(async () => ({
-      itemRead: 'PRIVILEGED',
-      itemInsert: 'PRIVILEGED',
-      itemUpdate: 'PRIVILEGED',
-      itemRemove: 'PRIVILEGED',
-    })),
-  },
 }));
 
 import { assessConfigurationStorage, loadConfiguration, saveConfiguration, initializeConfiguration, COLLECTION_ID } from '../../shared/configuration';
-import { collections, permissions } from '@wix/data';
+import { collections } from '@wix/data';
 
 beforeEach(() => {
   db.entries = undefined;
@@ -47,12 +39,6 @@ beforeEach(() => {
     displayField: 'title',
     fields: [{ key: 'title', type: 'TEXT' }, { key: 'payload', type: 'OBJECT' }],
   })) as never);
-  vi.mocked(permissions.getPermissions).mockResolvedValue({
-    itemRead: 'PRIVILEGED',
-    itemInsert: 'PRIVILEGED',
-    itemUpdate: 'PRIVILEGED',
-    itemRemove: 'PRIVILEGED',
-  } as never);
 });
 
 it('keeps new installations empty, round-trips create/edit/delete without restoring defaults', async () => {
@@ -99,12 +85,6 @@ it('rejects an existing collection with incompatible schema', async () => {
     _id: COLLECTION_ID,
     displayField: 'title',
     fields: [],
-  } as never);
-  vi.mocked(permissions.getPermissions).mockResolvedValueOnce({
-    itemRead: 'ANYONE',
-    itemInsert: 'PRIVILEGED',
-    itemUpdate: 'PRIVILEGED',
-    itemRemove: 'PRIVILEGED',
   } as never);
   const readiness = await assessConfigurationStorage();
   expect(readiness.ready).toBe(false);
