@@ -37,8 +37,20 @@ export function money(value: unknown): number {
   return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * 100) / 100 : 0;
 }
 
+/**
+ * `archived` is a top-level (non-`payload`) field so the billing scan can filter it
+ * server-side (`.ne('archived', true)`) without a nested-field query on `payload`.
+ * It is recomputed from the installments on every save -- never set by hand -- so a
+ * ledger automatically drops out of (or back into) the active billing scan as its
+ * installments change. This keeps the payment-ledger collection's *working set*
+ * bounded for billing without ever deleting a merchant's payment records.
+ */
+export function isLedgerFullyPaid(ledger: PaymentLedger): boolean {
+  return ledger.installments.length > 0 && ledger.installments.every(item => item.status === 'PAID');
+}
+
 export function toLedgerRecord(ledger: PaymentLedger) {
-  return { _id: ledger._id, title: ledger.orderId, payload: ledger };
+  return { _id: ledger._id, title: ledger.orderId, archived: isLedgerFullyPaid(ledger), payload: ledger };
 }
 
 export function fromLedgerRecord(raw: unknown): PaymentLedger | undefined {

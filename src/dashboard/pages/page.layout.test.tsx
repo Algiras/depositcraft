@@ -44,6 +44,7 @@ vi.mock('../../shared/entitlement', () => ({
 vi.mock('../../shared/ecommerce', () => ({
   resolveEcommerceInstalled: () => true,
   WIX_STORES_APP_MARKET_URL: 'https://example.com/stores',
+  WIX_ECOMMERCE_APP_MARKET_URL: 'https://example.com/ecommerce',
 }));
 
 vi.mock('../../shared/installment-billing', () => ({

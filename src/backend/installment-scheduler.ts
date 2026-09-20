@@ -1,9 +1,14 @@
 import { auth } from '@wix/essentials';
 import { items } from '@wix/data';
 import { orderPaymentRequests } from '@wix/ecom';
-import { processDueInstallments } from '../shared/installment-billing';
+import {
+  drainLedgerPages,
+  processDueInstallments,
+  LEDGER_DRAIN_PAGE_SIZE,
+  type LedgerCursorPage,
+} from '../shared/installment-billing';
 import { advancePaymentPlanForOrder, type PaymentDataAccess } from '../shared/payment-plan-service';
-import { PAYMENT_LEDGER_COLLECTION, fromLedgerRecord, type PaymentLedger } from '../shared/payment-ledger';
+import { PAYMENT_LEDGER_COLLECTION } from '../shared/payment-ledger';
 import { emitBackendDiagnostic as emitDiagnostic } from '../shared/logger';
 
 /**
@@ -20,21 +25,44 @@ const elevatedAccess: PaymentDataAccess = {
   getRequestUrl: auth.elevate(orderPaymentRequests.getOrderPaymentRequestUrl),
 };
 
-/** Backend entry point for scheduled billing (call from events or jobs). */
+/**
+ * Full due-installment scan for a genuine backend/scheduled trigger (no merchant
+ * session -- every read/write is elevated). Not called from the
+ * `order-payment-request-paid` webhook: that handler already knows which single
+ * order was paid and advances only that order's plan directly (see
+ * `events/order-payment-request-paid/event.ts`), so it must not fan out into a
+ * full scan of every other due ledger inside its short webhook budget. This
+ * function remains available for a merchant-triggered full run or a future
+ * scheduled job.
+ */
 export async function runInstallmentBilling() {
   const start = Date.now();
   try {
     const elevatedQuery = auth.elevate(items.query);
     const result = await processDueInstallments(
       async () => {
-        const response = await elevatedQuery(PAYMENT_LEDGER_COLLECTION).limit(100).find();
-        return response.items
-          .map(raw => fromLedgerRecord(raw))
-          .filter((ledger): ledger is PaymentLedger => Boolean(ledger));
+        const firstPage = await elevatedQuery(PAYMENT_LEDGER_COLLECTION)
+          .ne('archived', true)
+          .limit(LEDGER_DRAIN_PAGE_SIZE)
+          .find();
+        return drainLedgerPages(firstPage as unknown as LedgerCursorPage);
       },
       orderId => advancePaymentPlanForOrder(orderId, elevatedAccess),
     );
-    emitDiagnostic('installment_billing_run', { outcome: 'success', surface: 'backend', durationMs: Date.now() - start });
+    if (result.capped) {
+      // Silent truncation must be impossible: a capped drain means some due ledgers
+      // were not scanned this run. Surface it as a failure-outcome diagnostic
+      // (rather than silently reporting the truncated run as a plain success) so
+      // it is visible to whoever monitors `installment_billing_run`.
+      emitDiagnostic('installment_billing_run', {
+        outcome: 'failure',
+        surface: 'backend',
+        durationMs: Date.now() - start,
+        errorCode: 'LEDGER_DRAIN_CAPPED',
+      });
+    } else {
+      emitDiagnostic('installment_billing_run', { outcome: 'success', surface: 'backend', durationMs: Date.now() - start });
+    }
     return result;
   } catch (error) {
     emitDiagnostic('installment_billing_run', {

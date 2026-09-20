@@ -14,7 +14,7 @@ import { getAppEntitlement, canUsePaidFeatures, getWixPricingPageUrl, AppEntitle
 import { evaluateRuleAgainstPlan, canUseFixedDeposit, canUseCustomFrequency, FREE_PLAN_MAX_ACTIVE_RULES, FREE_PLAN_FIXED_FREQUENCY } from '../../shared/plan-limits';
 import { DepositRule, DepositType, DepositRuleScope, InstallmentFrequency } from '../../types';
 import { evaluateDepositPlan } from '../../backend/deposit-engine';
-import { resolveEcommerceInstalled, WIX_STORES_APP_MARKET_URL, type EcommerceInstallState } from '../../shared/ecommerce';
+import { resolveEcommerceInstalled, WIX_ECOMMERCE_APP_MARKET_URL, type EcommerceInstallState } from '../../shared/ecommerce';
 import { deferredDiscountPercent } from '../../shared/cart-evaluation';
 import { depositTriggerName } from '../../shared/deposit-trigger-id';
 import { processDueInstallments, listPaymentLedgerPage } from '../../shared/installment-billing';
@@ -656,9 +656,9 @@ function DepositCraftDashboard() {
               </Card.Content>
             </Card>
             {renderLiveChecklist()}
-          </Box> : ecommerceInstalled === false ? <EmptyState theme="page" title={intl.formatMessage({ id: 'app.dashboard.addStoresTitle', defaultMessage: 'Add Wix Stores to use DepositCraft' })} subtitle={intl.formatMessage({ id: 'app.dashboard.addStoresSubtitle', defaultMessage: 'DepositCraft configures deposit and installment plans for store orders. Add Wix Stores (or another Wix eCommerce app) to this site, then return here to set up your plans.' })}>
-            <Button as="a" href={WIX_STORES_APP_MARKET_URL} target="_blank" rel="noopener noreferrer">
-              <FormattedMessage id="app.dashboard.addStoresButton" defaultMessage="Add Wix Stores" />
+          </Box> : ecommerceInstalled === false ? <EmptyState theme="page" title={intl.formatMessage({ id: 'app.dashboard.addStoresTitle', defaultMessage: 'Add an eCommerce app to use DepositCraft' })} subtitle={intl.formatMessage({ id: 'app.dashboard.addStoresSubtitle', defaultMessage: 'DepositCraft configures deposit and installment plans for store orders. Add Wix Stores, Wix Bookings, or Wix Restaurants Orders — or any other Wix eCommerce app — to this site, then return here to set up your plans.' })}>
+            <Button as="a" href={WIX_ECOMMERCE_APP_MARKET_URL} target="_blank" rel="noopener noreferrer">
+              <FormattedMessage id="app.dashboard.addStoresButton" defaultMessage="Browse eCommerce apps" />
             </Button>
           </EmptyState> : <Box direction="vertical" gap="SP4">
             {showUpgradeSuccess && <SectionHelper skin="success" onClose={() => setShowUpgradeSuccess(false)}>
