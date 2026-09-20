@@ -2,7 +2,7 @@ import { withIntlProvider } from '../../intl/withIntlProvider';
 import { FormattedMessage, useIntl, type IntlShape } from 'react-intl';
 import React, { useEffect, useRef, useState } from 'react';
 import { appInstances } from '@wix/app-management';
-import { WixDesignSystemProvider, Page, Card, Table, TableActionCell, Button, TextButton, Badge, ToggleSwitch, Input, NumberInput, FormField, Modal, CustomModalLayout, MessageModalLayout, Box, Heading, Text, Divider, EmptyState, SectionHelper, StatisticsWidget, RadioGroup, Dropdown, Loader, Tooltip, InfoIcon } from '@wix/design-system';
+import { WixDesignSystemProvider, Page, Card, Table, TableActionCell, Button, TextButton, Badge, ToggleSwitch, Input, NumberInput, FormField, Modal, CustomModalLayout, MessageModalLayout, Box, Heading, Text, Divider, EmptyState, SectionHelper, StatisticsWidget, RadioGroup, Dropdown, Loader, InfoIcon } from '@wix/design-system';
 import { Delete, Checklist } from '@wix/wix-ui-icons-common';
 import '@wix/design-system/styles.global.css';
 import { InstallationChecklist, StorageSetupNeeded, type ChecklistItem } from '@wix-extensions/core/ui';
@@ -338,6 +338,7 @@ function DepositCraftDashboard() {
   };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [ruleIdPendingDelete, setRuleIdPendingDelete] = useState<string | null>(null);
+  const [isReferenceModalOpen, setIsReferenceModalOpen] = useState(false);
 
   // Modal form state
   const [newRuleName, setNewRuleName] = useState('');
@@ -641,14 +642,6 @@ function DepositCraftDashboard() {
             {storageReady && <TextButton size="small" prefixIcon={<Checklist size="16px" />} onClick={() => setShowSystemChecklist(prev => !prev)}>
                 <FormattedMessage id="app.dashboard.systemStatusButton" defaultMessage="System status" />
               </TextButton>}
-            {!isPaidPlan && <Tooltip content={!upgradeUrl ? intl.formatMessage({
-        id: 'app.dashboard.upgradeTooltipLoading',
-        defaultMessage: 'Plan details are still loading'
-      }) : undefined} disabled={Boolean(upgradeUrl)}>
-                <Button priority="secondary" skin="premium" onClick={handleUpgrade} disabled={!upgradeUrl}>
-                  <FormattedMessage id="app.common.upgradeToPro" defaultMessage="Upgrade to Pro" />
-                </Button>
-              </Tooltip>}
             <Button priority="primary" disabled={!storageReady} onClick={() => setIsModalOpen(true)}>
               <FormattedMessage id="app.dashboard.createPlanButton" defaultMessage="+ Create deposit plan" />
             </Button>
@@ -703,76 +696,7 @@ function DepositCraftDashboard() {
 
             {storageReady && showSystemChecklist && renderLiveChecklist()}
 
-            {storageReady && <SectionHelper skin="standard">
-                <Box direction="vertical" gap="SP2">
-                  <Text weight="bold"><FormattedMessage id="app.dashboard.supportedTitle" defaultMessage="Supported" /></Text>
-                  <Text size="small">
-                    {activeRule ? <FormattedMessage id="app.dashboard.supportedSummaryWithRule" defaultMessage="Layaway preview at cart/checkout; checkout deposits when you pair each active plan with an automatic discount using its DepositCraft custom trigger (for {ruleName}, about {percent} off when {triggerName} is active); installment payment links from Order Details; due-date Automations emails after you activate an automation for Installment due reminder (Automations → + New Automation → Send an email, timed to the due date)." values={{
-                  ruleName: activeRule.name,
-                  triggerName: depositTriggerName(activeRule.name),
-                  percent: intl.formatNumber(deferredDiscountPercent(evaluateDepositPlan({
-                    currency: CURRENCY,
-                    lineItems: [{
-                      catalogItemId: 'preview',
-                      quantity: 1,
-                      price: parseFloat(simSubtotal) || 0
-                    }],
-                    rules,
-                    selectedRuleId: activeRule.id
-                  })) / 100, {
-                    style: 'percent',
-                    maximumFractionDigits: 2
-                  })
-                }} /> : <FormattedMessage id="app.dashboard.supportedSummaryNoRule" defaultMessage="Layaway preview at cart/checkout; checkout deposits when you pair each active plan with an automatic discount using its DepositCraft custom trigger; installment payment links from Order Details; due-date Automations emails after you activate an automation for Installment due reminder (Automations → + New Automation → Send an email, timed to the due date)." />}
-                  </Text>
-                  <Text weight="bold"><FormattedMessage id="app.dashboard.notSupportedTitle" defaultMessage="Not supported" /></Text>
-                  <Text size="small">
-                    <FormattedMessage id="app.dashboard.notSupportedSummary" defaultMessage="Auto-charging saved cards without the buyer present; checkout deposits without your discount setup; collection-scoped plans on orders; external cron or background servers." />
-                  </Text>
-                  <Text>
-                    <Text weight="bold"><FormattedMessage id="app.dashboard.dueInstallmentsLabel" defaultMessage="Due installments:" /> </Text>
-                    <FormattedMessage id="app.dashboard.dueInstallmentsDescription" defaultMessage="DepositCraft creates the next payment link when a due date passes or after the previous request is marked paid. Customers always pay manually through your Payment Request Page." />
-                  </Text>
-                  <Box>
-                    <Button size="small" priority="secondary" disabled={isBillingRun} onClick={() => {
-                setIsBillingRun(true);
-                void processDueInstallments().then(result => {
-                  const message = result.linksCreated ? intl.formatMessage({
-                    id: 'app.dashboard.processDueSuccess',
-                    defaultMessage: '{linksCreated, plural, one {Created # payment link} other {Created # payment links}} for {dueCount, plural, one {# due installment} other {# due installments}}.'
-                  }, {
-                    linksCreated: result.linksCreated,
-                    dueCount: result.dueCount
-                  }) : result.dueCount ? intl.formatMessage({
-                    id: 'app.dashboard.processDueAlreadyOpen',
-                    defaultMessage: 'Due installments already have an open payment link.'
-                  }) : intl.formatMessage({
-                    id: 'app.dashboard.processDueNoneNow',
-                    defaultMessage: 'No installments are due for billing right now.'
-                  });
-                  showAppToast(message, 'success');
-                }).catch(() => showAppToast(intl.formatMessage({
-                  id: 'app.dashboard.processDueError',
-                  defaultMessage: 'DepositCraft could not process due installments.'
-                }), 'error')).finally(() => setIsBillingRun(false));
-              }}>
-                      <FormattedMessage id="app.dashboard.processDueInstallmentsButton" defaultMessage="Process due installments" />
-                    </Button>
-                  </Box>
-                </Box>
-              </SectionHelper>}
-
-            {storageReady && !isPaidPlan && <SectionHelper skin="premium" actionText={intl.formatMessage({
-          id: 'app.common.upgradeToPro',
-          defaultMessage: 'Upgrade to Pro'
-        })} onAction={handleUpgrade}>
-                <Text weight="bold"><FormattedMessage id="app.dashboard.unlockUnlimitedTitle" defaultMessage="Unlock unlimited deposit plans and custom schedules." /> </Text>
-                <FormattedMessage id="app.dashboard.freePlanLimitDescription" defaultMessage="Free plans support up to {limit, plural, one {# active percentage-based plan} other {# active percentage-based plans}} on a bi-weekly schedule. Upgrade to Pro for unlimited plans, fixed-amount deposits, and custom installment frequencies." values={{
-            limit: FREE_PLAN_MAX_ACTIVE_RULES
-          }} />
-              </SectionHelper>}
-
-            {storageReady && rules.length === 0 ? <Card>
+            {storageReady && rules.length === 0 && <Card>
                 <Card.Content>
                   <EmptyState theme="page" title={intl.formatMessage({ id: 'app.dashboard.emptyStateTitle', defaultMessage: 'Create your first deposit plan record' })} subtitle={intl.formatMessage({ id: 'app.dashboard.emptyStateSubtitle', defaultMessage: 'Define deposit percentage or amount, installment count, and frequency. Pair each active plan with an automatic discount trigger to collect deposits at checkout; balances are collected through payment request links.' })}>
                     <Button priority="primary" onClick={() => setIsModalOpen(true)}>
@@ -780,7 +704,9 @@ function DepositCraftDashboard() {
                     </Button>
                   </EmptyState>
                 </Card.Content>
-              </Card> : storageReady && <>
+              </Card>}
+
+            {storageReady && rules.length > 0 && <>
                   <Box gap="SP2" verticalAlign="middle">
                     <Text size="small" secondary>
                       <FormattedMessage id="app.dashboard.createOnlySavesHint" defaultMessage="Creating a plan here only saves its configuration and math. DepositCraft never changes checkout’s amount due on its own." />
@@ -936,8 +862,63 @@ function DepositCraftDashboard() {
                       </Table>
                     </Card.Content>
                   </Card>
+                </>}
 
-                  <Card>
+            {storageReady && <SectionHelper skin="standard" actionText={intl.formatMessage({
+          id: 'app.dashboard.learnMoreButton',
+          defaultMessage: 'Learn more'
+        })} onAction={() => setIsReferenceModalOpen(true)}>
+                <FormattedMessage id="app.dashboard.referenceSectionHelperText" defaultMessage="See what DepositCraft supports today at checkout, and what still needs setup elsewhere." />
+              </SectionHelper>}
+
+            {storageReady && !isPaidPlan && <SectionHelper skin="premium" actionText={intl.formatMessage({
+          id: 'app.common.upgradeToPro',
+          defaultMessage: 'Upgrade to Pro'
+        })} onAction={handleUpgrade}>
+                <Text weight="bold"><FormattedMessage id="app.dashboard.unlockUnlimitedTitle" defaultMessage="Unlock unlimited deposit plans and custom schedules." /> </Text>
+                <FormattedMessage id="app.dashboard.freePlanLimitDescription" defaultMessage="Free plans support up to {limit, plural, one {# active percentage-based plan} other {# active percentage-based plans}} on a bi-weekly schedule. Upgrade to Pro for unlimited plans, fixed-amount deposits, and custom installment frequencies." values={{
+            limit: FREE_PLAN_MAX_ACTIVE_RULES
+          }} />
+              </SectionHelper>}
+
+            {storageReady && rules.length > 0 && <Card>
+                <Card.Content>
+                  <Box align="space-between" verticalAlign="middle" gap="SP3">
+                    <Box direction="vertical" gap="SP1">
+                      <Text size="small" weight="bold"><FormattedMessage id="app.dashboard.dueInstallmentsLabel" defaultMessage="Due installments:" /></Text>
+                      <Text size="small" secondary>
+                        <FormattedMessage id="app.dashboard.dueInstallmentsDescription" defaultMessage="DepositCraft creates the next payment link when a due date passes or after the previous request is marked paid. Customers always pay manually through your Payment Request Page." />
+                      </Text>
+                    </Box>
+                    <Button size="small" priority="secondary" disabled={isBillingRun} onClick={() => {
+                setIsBillingRun(true);
+                void processDueInstallments().then(result => {
+                  const message = result.linksCreated ? intl.formatMessage({
+                    id: 'app.dashboard.processDueSuccess',
+                    defaultMessage: '{linksCreated, plural, one {Created # payment link} other {Created # payment links}} for {dueCount, plural, one {# due installment} other {# due installments}}.'
+                  }, {
+                    linksCreated: result.linksCreated,
+                    dueCount: result.dueCount
+                  }) : result.dueCount ? intl.formatMessage({
+                    id: 'app.dashboard.processDueAlreadyOpen',
+                    defaultMessage: 'Due installments already have an open payment link.'
+                  }) : intl.formatMessage({
+                    id: 'app.dashboard.processDueNoneNow',
+                    defaultMessage: 'No installments are due for billing right now.'
+                  });
+                  showAppToast(message, 'success');
+                }).catch(() => showAppToast(intl.formatMessage({
+                  id: 'app.dashboard.processDueError',
+                  defaultMessage: 'DepositCraft could not process due installments.'
+                }), 'error')).finally(() => setIsBillingRun(false));
+              }}>
+                      <FormattedMessage id="app.dashboard.processDueInstallmentsButton" defaultMessage="Process due installments" />
+                    </Button>
+                  </Box>
+                </Card.Content>
+              </Card>}
+
+            {storageReady && rules.length > 0 && <Card>
                     <Card.Header title={intl.formatMessage({
                     id: 'app.ledger.title',
                     defaultMessage: 'Payment ledger'
@@ -1003,9 +984,9 @@ function DepositCraftDashboard() {
                           </Box>
                         </Box>}
                     </Card.Content>
-                  </Card>
+                  </Card>}
 
-                  {rules.length > 0 && <Card>
+            {storageReady && rules.length > 0 && <Card>
                       <Card.Header title={intl.formatMessage({
                       id: 'app.simulator.title',
                       defaultMessage: 'Checkout layaway simulator'
@@ -1109,7 +1090,7 @@ function DepositCraftDashboard() {
                       </Card.Content>
                     </Card>}
 
-                  <Card>
+            {storageReady && rules.length > 0 && <Card>
                     <Card.Content>
                       <Box align="space-between" verticalAlign="middle" gap="SP3">
                         <Box direction="vertical" gap="SP1">
@@ -1127,8 +1108,7 @@ function DepositCraftDashboard() {
                         </Box>
                       </Box>
                     </Card.Content>
-                  </Card>
-                </>}
+                  </Card>}
           </Box>}
 
         {/* Modal to add a deposit plan */}
@@ -1274,6 +1254,50 @@ function DepositCraftDashboard() {
             name: rules.find(r => r.id === ruleIdPendingDelete)?.name ?? ''
           }} />
           </MessageModalLayout>
+        </Modal>
+
+        {/* Reference: what DepositCraft supports today, and what it does not */}
+        <Modal isOpen={isReferenceModalOpen} onRequestClose={() => setIsReferenceModalOpen(false)} shouldCloseOnOverlayClick>
+          <CustomModalLayout title={intl.formatMessage({
+          id: 'app.dashboard.referenceModalTitle',
+          defaultMessage: 'What DepositCraft supports'
+        })} closeButtonProps={{
+          onClick: () => setIsReferenceModalOpen(false)
+        }} primaryButtonText={intl.formatMessage({
+          id: 'app.dashboard.referenceModalCloseButton',
+          defaultMessage: 'Close'
+        })} primaryButtonOnClick={() => setIsReferenceModalOpen(false)}>
+            <Box direction="horizontal" gap="SP4">
+              <Box direction="vertical" gap="SP2" width="50%">
+                <Text weight="bold"><FormattedMessage id="app.dashboard.supportedTitle" defaultMessage="Supported" /></Text>
+                <Text size="small">
+                  {activeRule ? <FormattedMessage id="app.dashboard.supportedSummaryWithRule" defaultMessage="Layaway preview at cart/checkout; checkout deposits when you pair each active plan with an automatic discount using its DepositCraft custom trigger (for {ruleName}, about {percent} off when {triggerName} is active); installment payment links from Order Details; due-date Automations emails after you activate an automation for Installment due reminder (Automations → + New Automation → Send an email, timed to the due date)." values={{
+                  ruleName: activeRule.name,
+                  triggerName: depositTriggerName(activeRule.name),
+                  percent: intl.formatNumber(deferredDiscountPercent(evaluateDepositPlan({
+                    currency: CURRENCY,
+                    lineItems: [{
+                      catalogItemId: 'preview',
+                      quantity: 1,
+                      price: parseFloat(simSubtotal) || 0
+                    }],
+                    rules,
+                    selectedRuleId: activeRule.id
+                  })) / 100, {
+                    style: 'percent',
+                    maximumFractionDigits: 2
+                  })
+                }} /> : <FormattedMessage id="app.dashboard.supportedSummaryNoRule" defaultMessage="Layaway preview at cart/checkout; checkout deposits when you pair each active plan with an automatic discount using its DepositCraft custom trigger; installment payment links from Order Details; due-date Automations emails after you activate an automation for Installment due reminder (Automations → + New Automation → Send an email, timed to the due date)." />}
+                </Text>
+              </Box>
+              <Box direction="vertical" gap="SP2" width="50%">
+                <Text weight="bold"><FormattedMessage id="app.dashboard.notSupportedTitle" defaultMessage="Not supported" /></Text>
+                <Text size="small">
+                  <FormattedMessage id="app.dashboard.notSupportedSummary" defaultMessage="Auto-charging saved cards without the buyer present; checkout deposits without your discount setup; collection-scoped plans on orders; external cron or background servers." />
+                </Text>
+              </Box>
+            </Box>
+          </CustomModalLayout>
         </Modal>
       </Page.Content>
     </Page>;
