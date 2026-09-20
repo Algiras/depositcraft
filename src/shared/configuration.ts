@@ -1,4 +1,4 @@
-import { collections, items, permissions } from '@wix/data';
+import { collections, items } from '@wix/data';
 import { emitDiagnostic, markSetupFinished } from './logger';
 import {
   classifyStorageFailure,
@@ -18,7 +18,7 @@ export async function assessConfigurationStorage(): Promise<StorageReadinessAsse
     const assessment = await withStorageTimeout(() =>
       assessStorageRequirements(
         (id) => collections.getDataCollection(id, { consistentRead: true }),
-        (id) => permissions.getPermissions(id) as Promise<Record<string, string>>,
+        async () => ({}),
         APP_NAME,
       ));
     if (!assessment.ready) {

@@ -7,12 +7,22 @@ export type StorageSetupState =
   | 'timeout'
   | 'error';
 
+export type StorageCheckItem = {
+  id: string;
+  name: string;
+  ready: boolean;
+  status: 'ready' | 'missing' | 'schema_mismatch' | 'error';
+  detail?: string;
+  missingPermissions?: string[];
+};
+
 export type StorageReadinessAssessment = {
   ready: boolean;
   state: StorageSetupState;
   message: string;
   details?: string;
   requestId?: string;
+  items?: StorageCheckItem[];
 };
 
 export function errorDetail(error: unknown): string {

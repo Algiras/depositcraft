@@ -22,6 +22,14 @@ describe('assessStorageRequirements', () => {
     expect(result).toMatchObject({ ready: true, state: 'ready' });
   });
 
+  it('accepts the Wix getPermissions response envelope', async () => {
+    const result = await readers(
+      async id => matchingCollection(id),
+      async () => ({ dataPermissions: matchingPermissions() }),
+    );
+    expect(result).toMatchObject({ ready: true, state: 'ready' });
+  });
+
   it.each([
     ['collection not found (WDE0025)', Object.assign(new Error('WDE0025: data collection not found'), {})],
     ['permission denied (403)', Object.assign(new Error('403: permission denied for app-private collection'), {})],

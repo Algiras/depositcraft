@@ -68,7 +68,7 @@ test('storage provisioning shows an auto-updating loader and recovers without a 
   // First-load auto-retry runs checks at 0/5/15/30s; the mock fails all four,
   // so at ~31s the initial loader hands off to the provisioning loader.
   await page.clock.runFor(31_000);
-  await expect(page.getByText('Setting up DepositCraft storage')).toBeVisible();
+  await expect(page.getByText('Welcome to DepositCraft')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Check again' })).toHaveCount(0);
 
   // The loader polls every 15s on its own; the 5th check succeeds.
