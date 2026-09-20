@@ -104,7 +104,7 @@ export async function reconcileCheckoutDepositOrder(orderId: string): Promise<Pa
       if (created) return created;
       continue;
     }
-    await syncInstallmentAutomations(ledger);
+    await syncInstallmentAutomations(ledger, { elevated: true }, emitDiagnostic);
     const withNext = await createNextRequest(ledger);
     emitDiagnostic('checkout_deposit_seed', { outcome: 'success', surface: 'backend' });
     return withNext;

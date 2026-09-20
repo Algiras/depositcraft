@@ -16,7 +16,10 @@ import {
 } from './payment-ledger';
 import { installmentDueAt } from './installment-dates';
 import { CheckoutLineItem, DepositRule } from '../types';
-import { syncInstallmentAutomations } from '../backend/automation-reporter';
+import { syncInstallmentAutomations, type AutomationReportOptions } from '../backend/automation-reporter';
+import { emitDiagnostic } from './logger';
+
+type DiagnosticEmitter = typeof emitDiagnostic;
 
 /**
  * `startPaymentPlanForOrder` and `syncPaymentPlanFromWix` are dashboard-only
@@ -90,7 +93,12 @@ async function paymentUrl(paymentRequestId: string, getRequestUrl: PaymentDataAc
   return response.orderPaymentRequestUrl;
 }
 
-async function createNextRequest(ledger: PaymentLedger, access: PaymentDataAccess = defaultDataAccess): Promise<PaymentLedger> {
+async function createNextRequest(
+  ledger: PaymentLedger,
+  access: PaymentDataAccess = defaultDataAccess,
+  automationOptions: AutomationReportOptions = {},
+  automationEmit: DiagnosticEmitter = emitDiagnostic,
+): Promise<PaymentLedger> {
   const next = ledger.installments.find(item => item.status === 'PENDING' && !item.paymentRequestId);
   if (!next) return ledger;
   const creating = {
@@ -123,7 +131,7 @@ async function createNextRequest(ledger: PaymentLedger, access: PaymentDataAcces
     )),
   };
   await access.saveItem(PAYMENT_LEDGER_COLLECTION, toLedgerRecord(updated));
-  await syncInstallmentAutomations(updated);
+  await syncInstallmentAutomations(updated, automationOptions, automationEmit);
   return updated;
 }
 
@@ -185,19 +193,26 @@ export async function startPaymentPlanForOrder(orderId: string, ruleId: string):
 
 /**
  * Creates the next unpaid installment link when the previous one is already marked
- * paid in the ledger. Called both from the dashboard (merchant session; `access`
- * omitted, unelevated) and from the backend billing scheduler (no merchant session;
- * caller must pass a fully `auth.elevate`d `PaymentDataAccess`).
+ * paid in the ledger. Called both from the dashboard (merchant session; `access`,
+ * `automationOptions` and `automationEmit` all omitted, unelevated/plain) and
+ * from the backend billing scheduler (no merchant session; caller must pass a
+ * fully `auth.elevate`d `PaymentDataAccess`, `{ elevated: true }` for
+ * `automationOptions` so the automation-report calls this drives --
+ * `orders.getOrder` / `activations.reportEvent` / `activations.cancelEvent`
+ * -- elevate too, and its own already-imported `emitBackendDiagnostic` as
+ * `automationEmit`).
  */
 export async function advancePaymentPlanForOrder(
   orderId: string,
   access: PaymentDataAccess = defaultDataAccess,
+  automationOptions: AutomationReportOptions = {},
+  automationEmit: DiagnosticEmitter = emitDiagnostic,
 ): Promise<StartedPaymentPlan | undefined> {
   if (!orderId) throw new Error('An existing Wix order ID is required.');
   return withOrderLock(orderId, async () => {
     const ledger = await getPaymentLedger(orderId, access.getItem);
     if (!ledger) throw new Error('No DepositCraft payment plan exists for this order yet.');
-    const updated = await createNextRequest(ledger, access);
+    const updated = await createNextRequest(ledger, access, automationOptions, automationEmit);
     const pending = updated.installments.find(item => item.paymentRequestUrl && item.status !== 'PAID');
     return pending?.paymentRequestUrl ? startedPlan(updated) : undefined;
   });

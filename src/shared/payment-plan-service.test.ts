@@ -46,6 +46,14 @@ vi.mock('@wix/automations', () => ({
   },
 }));
 
+// Spy (not a plain passthrough) so tests can prove *whether* auth.elevate was
+// invoked for the automation-report calls `syncInstallmentAutomations` makes
+// on behalf of `startPaymentPlanForOrder`/`advancePaymentPlanForOrder` --
+// dashboard callers must never elevate, a caller-supplied
+// `{ elevated: true }` must always.
+const essentials = vi.hoisted(() => ({ elevate: vi.fn((fn: unknown) => fn) }));
+vi.mock('@wix/essentials', () => ({ auth: { elevate: essentials.elevate } }));
+
 vi.mock('@wix/app-management', () => ({
   appInstances: { getAppInstance: async () => ({ instance: { isFree: false } }) },
   billing: { getUrl: vi.fn() },
@@ -91,6 +99,7 @@ beforeEach(() => {
   state.ledger = undefined;
   state.created = [];
   state.requestStatus = new Map();
+  essentials.elevate.mockClear();
 });
 
 it('starts a payment plan and exposes the first payment link', async () => {
@@ -152,4 +161,32 @@ it('advances via a caller-supplied PaymentDataAccess instead of the module defau
   expect(custom.created).toHaveLength(1);
   expect(custom.saved.length).toBeGreaterThan(0);
   expect(state.created).toHaveLength(defaultCreatedBefore);
+});
+
+// Proves the `automationOptions` parameter added to
+// `advancePaymentPlanForOrder`/`createNextRequest` is actually threaded down
+// into `syncInstallmentAutomations`'s `orders.getOrder` /
+// `activations.reportEvent` / `activations.cancelEvent` calls, matching the
+// `PaymentDataAccess` elevation pattern used elsewhere in this file.
+it('does NOT elevate orders.getOrder/activations.reportEvent/cancelEvent by default (dashboard path)', async () => {
+  const { orders } = await import('@wix/ecom');
+  const { activations } = await import('@wix/automations');
+  await startPaymentPlanForOrder('order-5', 'plan-25');
+  // Note: this app's own BI diagnostics elevation is out of scope for this
+  // fix -- only the automation-report Wix API calls are asserted here.
+  expect(essentials.elevate).not.toHaveBeenCalledWith(orders.getOrder);
+  expect(essentials.elevate).not.toHaveBeenCalledWith(activations.reportEvent);
+  expect(essentials.elevate).not.toHaveBeenCalledWith(activations.cancelEvent);
+});
+
+it('elevates orders.getOrder/activations.reportEvent/cancelEvent when the caller passes { elevated: true } (backend scheduler path)', async () => {
+  const { orders } = await import('@wix/ecom');
+  await startPaymentPlanForOrder('order-6', 'plan-25');
+  state.ledger.payload.installments[0].status = 'PAID';
+  state.ledger.payload.installments[0].paymentRequestId = 'request-1';
+  delete state.ledger.payload.installments[0].paymentRequestUrl;
+  essentials.elevate.mockClear();
+
+  await advancePaymentPlanForOrder('order-6', undefined, { elevated: true });
+  expect(essentials.elevate).toHaveBeenCalledWith(orders.getOrder);
 });

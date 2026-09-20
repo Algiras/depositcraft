@@ -5,7 +5,8 @@ import { appInstances } from '@wix/app-management';
 import { WixDesignSystemProvider, Page, Card, Table, TableActionCell, Button, TextButton, Badge, ToggleSwitch, Input, NumberInput, FormField, Modal, CustomModalLayout, MessageModalLayout, Box, Heading, Text, Divider, EmptyState, SectionHelper, StatisticsWidget, RadioGroup, Dropdown, Loader, InfoIcon } from '@wix/design-system';
 import { Delete, Checklist } from '@wix/wix-ui-icons-common';
 import '@wix/design-system/styles.global.css';
-import { InstallationChecklist, StorageSetupNeeded, type ChecklistItem } from '@wix-extensions/core/ui';
+import { InstallationChecklist, StorageSetupNeeded, DashboardErrorBoundary, type ChecklistItem } from '@wix-extensions/core/ui';
+import { installGlobalErrorReporting } from '@wix-extensions/core/telemetry';
 import { loadConfiguration, saveConfiguration, assessConfigurationStorage } from '../../shared/configuration';
 import { confirmStorageWithAutoRetry, extractRequestId, storageDetailHint, type StorageSetupState, type StorageCheckItem } from '../../shared/storage-readiness';
 import { emitDiagnostic, markDashboardLoaded, markSetupFinished } from '../../shared/logger';
@@ -20,72 +21,35 @@ import { depositTriggerName } from '../../shared/deposit-trigger-id';
 import { processDueInstallments, listPaymentLedgerPage } from '../../shared/installment-billing';
 import type { PaymentLedger } from '../../shared/payment-ledger';
 const APP_ID = 'cecd3584-c6bd-4895-a776-613643ef171d';
-const SUPPORT_EMAIL = 'kras.algim@gmail.com';
 const CURRENCY = 'USD';
 const LEDGER_PAGE_SIZE = 25;
 
-class ErrorBoundary extends React.Component<{
-  children: React.ReactNode;
-}, {
-  hasError: boolean;
-  error: string;
-}> {
-  constructor(props: {
-    children: React.ReactNode;
-  }) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: ''
-    };
-  }
-  static getDerivedStateFromError(error: Error) {
-    return {
-      hasError: true,
-      error: error.message
-    };
-  }
-  componentDidCatch(_error: Error) {
+// Wraps the dashboard tree with the shared DashboardErrorBoundary. This is a
+// function component (rather than inlining DashboardErrorBoundary directly at
+// the call site) so it can call useIntl() for localized fallback copy — it
+// renders inside withIntlProvider's IntlProvider, since DepositCraftPage
+// (which renders this) is itself the child passed to withIntlProvider(...).
+function DepositCraftDashboardBoundary({ children }: { children: React.ReactNode }) {
+  const intl = useIntl();
+  const handleError = (_error: Error, _componentStack: string, reference: string) => {
     emitDiagnostic('dashboard_error', {
       outcome: 'failure',
-      errorCode: 'RENDER_FAILED'
+      errorCode: 'RENDER_FAILED',
+      reference
     });
-  }
-  render() {
-    if (this.state.hasError) {
-      return <Page minWidth={0} maxWidth={0} sidePadding={48}>
-          <Page.Content>
-            <Card>
-              <Card.Content>
-                <Box direction="vertical" gap="12px">
-                  <Heading size="small"><FormattedMessage id="app.errorBoundary.title" defaultMessage="Something went wrong loading the dashboard." /></Heading>
-                  <Text size="small" secondary>{this.state.error || <FormattedMessage id="app.errorBoundary.detail" defaultMessage="Reload this page or contact support if the problem continues." />}</Text>
-                  <Box>
-                    <Button onClick={() => this.setState({
-                    hasError: false,
-                    error: ''
-                  })}><FormattedMessage id="app.common.tryAgain" defaultMessage="Try again" /></Button>
-                  </Box>
-                </Box>
-              </Card.Content>
-            </Card>
-          </Page.Content>
-        </Page>;
-    }
-    return this.props.children;
-  }
-}
-function supportMailtoUrl(subject: string): string {
-  return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}`;
-}
-function ContactSupportLink({
-  subject
-}: {
-  subject: string;
-}) {
-  return <TextButton size="small" as="a" href={supportMailtoUrl(subject)}>
-      <FormattedMessage id="app.common.contactSupport" defaultMessage="Contact support" />
-    </TextButton>;
+  };
+  return <DashboardErrorBoundary
+      appName="DepositCraft"
+      onError={handleError}
+      title={intl.formatMessage({ id: 'app.errorBoundary.title', defaultMessage: 'Something went wrong loading the dashboard.' })}
+      subtitle={intl.formatMessage({ id: 'app.errorBoundary.detail', defaultMessage: 'Reload this page or contact support if the problem continues.' })}
+      reloadLabel={intl.formatMessage({ id: 'app.common.tryAgain', defaultMessage: 'Try again' })}
+      detailsShowLabel={intl.formatMessage({ id: 'app.errorBoundary.detailsShowLabel', defaultMessage: 'Show technical details' })}
+      detailsHideLabel={intl.formatMessage({ id: 'app.errorBoundary.detailsHideLabel', defaultMessage: 'Hide technical details' })}
+      referenceLabel={intl.formatMessage({ id: 'app.errorBoundary.referenceLabel', defaultMessage: 'Reference' })}
+    >
+      {children}
+    </DashboardErrorBoundary>;
 }
 function frequencyMessageId(freq: InstallmentFrequency | undefined): string {
   if (freq === 'WEEKLY') return 'app.frequency.weekly';
@@ -1100,10 +1064,6 @@ function DepositCraftDashboard() {
                           </Text>
                         </Box>
                         <Box gap="SP2" verticalAlign="middle">
-                          <ContactSupportLink subject={intl.formatMessage({
-                        id: 'app.dashboard.contactSupportSubject',
-                        defaultMessage: 'DepositCraft: Layaway & Deposits support'
-                      })} />
                           <Button onClick={saveChanges}><FormattedMessage id="app.dashboard.saveConfigurationButton" defaultMessage="Save configuration" /></Button>
                         </Box>
                       </Box>
@@ -1303,10 +1263,27 @@ function DepositCraftDashboard() {
     </Page>;
 }
 function DepositCraftPage() {
+  // Global capture for errors an error boundary cannot see: event-handler
+  // throws, timer callbacks, and unhandled promise rejections (e.g. a failed
+  // save or SDK call). Only errorCode/kind are forwarded — never message or
+  // source, which can carry merchant/customer PII via stack text or URLs.
+  useEffect(() => {
+    return installGlobalErrorReporting({
+      report: (report) => {
+        emitDiagnostic('client_error', {
+          outcome: 'failure',
+          errorCode: report.errorCode,
+          surface: 'dashboard',
+          kind: report.kind,
+        });
+      },
+    });
+  }, []);
+
   return <WixDesignSystemProvider>
-      <ErrorBoundary>
+      <DepositCraftDashboardBoundary>
         <DepositCraftDashboard />
-      </ErrorBoundary>
+      </DepositCraftDashboardBoundary>
     </WixDesignSystemProvider>;
 }
 export default withIntlProvider(DepositCraftPage);

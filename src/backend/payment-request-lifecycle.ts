@@ -17,6 +17,7 @@ import {
 } from '../shared/payment-ledger';
 import { CheckoutLineItem, DepositRule } from '../types';
 import { syncInstallmentAutomations } from './automation-reporter';
+import { emitBackendDiagnostic as emitDiagnostic } from '../shared/logger';
 
 export type { StartedPaymentPlan } from '../shared/payment-ledger';
 
@@ -117,7 +118,7 @@ export async function createNextRequest(ledger: PaymentLedger): Promise<PaymentL
     )),
   };
   await auth.elevate(items.save)(PAYMENT_LEDGER_COLLECTION, toLedgerRecord(updated));
-  await syncInstallmentAutomations(updated);
+  await syncInstallmentAutomations(updated, { elevated: true }, emitDiagnostic);
   return updated;
 }
 
@@ -184,7 +185,7 @@ export async function handleOrderPaymentRequestPaid(paymentRequestId: string, or
       )),
     };
     await auth.elevate(items.save)(PAYMENT_LEDGER_COLLECTION, toLedgerRecord(paid));
-    await syncInstallmentAutomations(paid);
+    await syncInstallmentAutomations(paid, { elevated: true }, emitDiagnostic);
     await createNextRequest(paid);
   });
 }

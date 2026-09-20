@@ -41,7 +41,8 @@ export type DiagnosticEventName =
   | 'app_installed'
   | 'app_removed'
   | 'app_paid_plan_changed'
-  | 'dashboard_error';
+  | 'dashboard_error'
+  | 'client_error';
 
 export type DiagnosticOutcome = 'success' | 'failure';
 
@@ -54,6 +55,10 @@ export type DiagnosticInput = {
   mode?: 'sample' | 'real';
   /** Retry-loop attempts count (storage_install_verify). */
   attempts?: number;
+  /** 'uncaught_error' for window.onerror, 'unhandled_rejection' for promises (client_error). */
+  kind?: 'uncaught_error' | 'unhandled_rejection';
+  /** Short merchant-quotable code shown alongside a dashboard_error crash screen, so a support report can be matched to this event. */
+  reference?: string;
 };
 
 const APP_VERSION = '1.0.0';

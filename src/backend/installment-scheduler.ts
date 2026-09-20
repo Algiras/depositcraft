@@ -47,7 +47,7 @@ export async function runInstallmentBilling() {
           .find();
         return drainLedgerPages(firstPage as unknown as LedgerCursorPage);
       },
-      orderId => advancePaymentPlanForOrder(orderId, elevatedAccess),
+      orderId => advancePaymentPlanForOrder(orderId, elevatedAccess, { elevated: true }, emitDiagnostic),
     );
     if (result.capped) {
       // Silent truncation must be impossible: a capped drain means some due ledgers
