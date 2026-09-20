@@ -23,6 +23,9 @@ export type StorageCheckItem = {
   status: 'ready' | 'missing' | 'schema_mismatch' | 'error';
   detail?: string;
   missingPermissions?: string[];
+  /** See core's `StorageCheckItem.permissionsVerified`: false when a reader (e.g. the
+   * items.query-based default probe) could not see permissions data to verify. */
+  permissionsVerified?: boolean;
 };
 
 export type StorageReadinessAssessment = {

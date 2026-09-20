@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 
-const db = vi.hoisted(() => ({ entries: undefined as unknown, fail: false }));
+const db = vi.hoisted(() => ({ entries: undefined as unknown, fail: false, probeError: undefined as Error | undefined }));
 
 vi.mock('@wix/data', () => ({
   items: {
@@ -13,6 +13,13 @@ vi.mock('@wix/data', () => ({
           };
         },
       }),
+      // Storage-readiness probe path: query(id).limit(1).find(...) (see createItemsQueryReader).
+      limit: () => ({
+        find: async () => {
+          if (db.probeError) throw db.probeError;
+          return { items: [] };
+        },
+      }),
     })),
     save: async (_collection: string, item: { payload: { entries: unknown } }) => {
       if (db.fail) throw new Error('denied');
@@ -20,11 +27,7 @@ vi.mock('@wix/data', () => ({
     },
   },
   collections: {
-    getDataCollection: vi.fn(async (id: string) => ({
-      _id: id,
-      displayField: 'title',
-      fields: [{ key: 'title', type: 'TEXT' }, { key: 'payload', type: 'OBJECT' }],
-    })),
+    getDataCollection: vi.fn(),
   },
 }));
 
@@ -34,11 +37,8 @@ import { collections } from '@wix/data';
 beforeEach(() => {
   db.entries = undefined;
   db.fail = false;
-  vi.mocked(collections.getDataCollection).mockImplementation((async (id: string) => ({
-    _id: id,
-    displayField: 'title',
-    fields: [{ key: 'title', type: 'TEXT' }, { key: 'payload', type: 'OBJECT' }],
-  })) as never);
+  db.probeError = undefined;
+  vi.mocked(collections.getDataCollection).mockClear();
 });
 
 it('keeps new installations empty, round-trips create/edit/delete without restoring defaults', async () => {
@@ -58,11 +58,12 @@ it('surfaces storage failures instead of reporting a successful save or loading 
 });
 
 it('reports provisioning when the collection is missing', async () => {
-  vi.mocked(collections.getDataCollection).mockRejectedValue(new Error('WDE0025 data collection not found'));
+  db.probeError = new Error('WDE0025 data collection not found');
   const readiness = await assessConfigurationStorage();
   expect(readiness.ready).toBe(false);
   expect(readiness.state).toBe('provisioning');
   await expect(initializeConfiguration()).rejects.toThrow('DepositCraft is still provisioning private storage');
+  expect(collections.getDataCollection).not.toHaveBeenCalled();
 });
 
 // assessConfigurationStorage is a single, unretried probe (it is the callback
@@ -75,7 +76,7 @@ it('reports provisioning when the collection is missing', async () => {
 // packages/core/src/storage/storage.test.ts and
 // src/shared/storage-readiness.test.ts for the retry-budget contract.
 it('reports a distinct permission_denied state when private storage returns 403', async () => {
-  vi.mocked(collections.getDataCollection).mockRejectedValue(new Error('403 Forbidden'));
+  db.probeError = new Error('403 Forbidden');
   const readiness = await assessConfigurationStorage();
   expect(readiness.ready).toBe(false);
   expect(readiness.state).toBe('permission_denied');
@@ -105,26 +106,24 @@ it('reads configuration through a caller-supplied query fn instead of the module
   expect(items.query).not.toHaveBeenCalled();
 });
 
-it('assesses storage through a caller-supplied getCollection fn instead of the module default', async () => {
-  vi.mocked(collections.getDataCollection).mockClear();
-  const elevatedGetCollection = vi.fn(async (id: string) => ({
-    _id: id,
-    displayField: 'title',
-    fields: [{ key: 'title', type: 'TEXT' }, { key: 'payload', type: 'OBJECT' }],
-  }));
-  const readiness = await assessConfigurationStorage(elevatedGetCollection as never);
+it('assesses storage through a caller-supplied reader instead of the module default', async () => {
+  const elevatedReader = vi.fn(async (id: string) => ({ _id: id, shapeUnknown: true }));
+  const readiness = await assessConfigurationStorage(elevatedReader as never);
   expect(readiness.ready).toBe(true);
-  expect(elevatedGetCollection).toHaveBeenCalled();
+  expect(elevatedReader).toHaveBeenCalled();
   expect(collections.getDataCollection).not.toHaveBeenCalled();
 });
 
-it('rejects an existing collection with incompatible schema', async () => {
-  vi.mocked(collections.getDataCollection).mockResolvedValueOnce({
-    _id: COLLECTION_ID,
-    displayField: 'title',
-    fields: [],
-  } as never);
+it('reports ready-but-unverified since an items.query probe can never see collection structure', async () => {
+  // Deliberate, permanent trade-off of the fix: the old getDataCollection-based
+  // probe could reject an incompatible schema (e.g. missing fields); an
+  // items.query-based probe cannot see collection structure at all, so that
+  // detection is no longer possible via the default reader. A caller that
+  // legitimately holds DATA-COLLECTIONS-MANAGE can still opt into a
+  // getDataCollection-based reader (see the test above) for full verification.
   const readiness = await assessConfigurationStorage();
-  expect(readiness.ready).toBe(false);
-  expect(readiness.state).toBe('schema_mismatch');
+  expect(readiness.ready).toBe(true);
+  expect(readiness.state).toBe('ready');
+  expect(readiness.items?.every(item => item.permissionsVerified === false)).toBe(true);
+  expect(collections.getDataCollection).not.toHaveBeenCalled();
 });

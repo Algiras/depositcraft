@@ -1,6 +1,6 @@
 import { orderPaymentRequests, orders } from '@wix/ecom';
 import { auth } from '@wix/essentials';
-import { collections, items } from '@wix/data';
+import { items } from '@wix/data';
 import { evaluateDepositPlan } from './deposit-engine';
 import { COLLECTION_ID } from '../shared/configuration';
 import { getAppEntitlement } from '../shared/entitlement';
@@ -35,9 +35,17 @@ async function withOrderLock<T>(orderId: string, work: () => Promise<T>): Promis
   }
 }
 
+/**
+ * ROOT CAUSE FIX: this used to probe with `collections.getDataCollection`,
+ * which requires `SCOPE.DC-DATA.DATA-COLLECTIONS-MANAGE` -- a scope
+ * DepositCraft (like every app in this portfolio) does not hold, so this
+ * 403'd permanently. It now probes with `items.query(...).limit(1).find(...)`,
+ * which only needs `SCOPE.DC-DATA.READ` (a scope this app already holds for
+ * ledger reads/writes). See `packages/core/src/storage/probe.ts`.
+ */
 export async function initializePaymentLedger(): Promise<void> {
   try {
-    await auth.elevate(collections.getDataCollection)(PAYMENT_LEDGER_COLLECTION, { consistentRead: true });
+    await auth.elevate(items.query)(PAYMENT_LEDGER_COLLECTION).limit(1).find({ consistentRead: true });
   } catch {
     throw new Error('Private storage is not ready on this site. Install or update the app, wait up to five minutes, then click Retry.');
   }

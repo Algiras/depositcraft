@@ -1,5 +1,6 @@
 import {
   assessStorageRequirements as coreAssessStorageRequirements,
+  createItemsQueryReader as coreCreateItemsQueryReader,
   type CollectionMetadataReader,
   type StorageCollectionRequirement,
   type StorageCollectionShape,
@@ -13,6 +14,9 @@ export type {
   StorageCollectionShape,
   StorageReadinessAssessment,
 };
+
+// Byte-for-byte identical to core's implementation.
+export const createItemsQueryReader = coreCreateItemsQueryReader;
 
 export async function assessStorageRequirements(
   readCollection: CollectionMetadataReader,

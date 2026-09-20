@@ -1,4 +1,4 @@
-import { collections, items } from '@wix/data';
+import { items } from '@wix/data';
 import { emitDiagnostic, markSetupFinished } from './logger';
 import {
   classifyStorageFailure,
@@ -6,26 +6,36 @@ import {
   type StorageReadinessAssessment,
   withStorageTimeout,
 } from './storage-readiness';
-import { assessStorageRequirements } from './storage-shape';
+import { assessStorageRequirements, createItemsQueryReader, type CollectionMetadataReader } from './storage-shape';
 import { COLLECTION_ID } from './storage-collections';
 
 export { COLLECTION_ID };
 const APP_NAME = 'DepositCraft';
 
 /**
- * `getCollection` defaults to the plain (unelevated) `collections.getDataCollection`
- * for dashboard/browser callers, which have a merchant session. Backend callers with
- * no merchant session (e.g. the tools-provider SPI) must pass
- * `auth.elevate(collections.getDataCollection)` or the call fails with 403 Forbidden.
+ * `reader` defaults to an `items.query`-based probe (`SCOPE.DC-DATA.READ`,
+ * which this app already holds) for dashboard/browser callers, which have a
+ * merchant session. Backend callers with no merchant session (e.g. the
+ * tools-provider SPI) must pass a reader built on `auth.elevate(items.query)`
+ * or the call fails with 403 Forbidden.
+ *
+ * ROOT CAUSE FIX: this used to default to `collections.getDataCollection`,
+ * which requires `SCOPE.DC-DATA.DATA-COLLECTIONS-MANAGE` -- a scope
+ * DepositCraft (like every app in this portfolio) does not hold, so the
+ * check 403'd permanently. The `items.query` probe cannot see collection
+ * structure, so schema/permission verification is no longer possible via
+ * this path: `assessStorageRequirements` reports each collection as
+ * ready-but-unverified (`shapeUnknown`) instead of faking a schema check. See
+ * `packages/core/src/storage/probe.ts` for the full incident writeup.
  */
 export async function assessConfigurationStorage(
-  getCollection: typeof collections.getDataCollection = collections.getDataCollection,
+  reader: CollectionMetadataReader = createItemsQueryReader(items.query),
 ): Promise<StorageReadinessAssessment> {
   const start = Date.now();
   try {
     const assessment = await withStorageTimeout(() =>
       assessStorageRequirements(
-        (id: string) => getCollection(id, { consistentRead: true }),
+        reader,
         APP_NAME,
       ));
     if (!assessment.ready) {
@@ -64,9 +74,9 @@ function provisioningTimeoutMessage(): string {
 }
 
 export async function verifyConfigurationStorage(
-  getCollection: typeof collections.getDataCollection = collections.getDataCollection,
+  reader?: CollectionMetadataReader,
 ): Promise<boolean> {
-  return (await assessConfigurationStorage(getCollection)).ready;
+  return (await assessConfigurationStorage(reader)).ready;
 }
 
 /**

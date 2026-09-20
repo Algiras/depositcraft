@@ -1,6 +1,7 @@
 import { toolsProvider } from '@wix/app-tools/service-plugins';
-import { collections, items } from '@wix/data';
+import { items } from '@wix/data';
 import { auth } from '@wix/essentials';
+import { createItemsQueryReader } from '../../../shared/storage-shape';
 import { canUsePaidFeatures, getAppEntitlement } from '../../../shared/entitlement';
 import { loadConfiguration, verifyConfigurationStorage } from '../../../shared/configuration';
 
@@ -15,10 +16,10 @@ toolsProvider.provideHandlers({
         return { response: { status: entitlement.status, isPaid: canUsePaidFeatures(entitlement) } };
       }
       case 'verify-storage': {
-        return { response: { ready: await verifyConfigurationStorage(auth.elevate(collections.getDataCollection)) } };
+        return { response: { ready: await verifyConfigurationStorage(createItemsQueryReader(auth.elevate(items.query))) } };
       }
       case 'describe-config': {
-        if (!(await verifyConfigurationStorage(auth.elevate(collections.getDataCollection)))) return { response: { ready: false, count: 0 } };
+        if (!(await verifyConfigurationStorage(createItemsQueryReader(auth.elevate(items.query))))) return { response: { ready: false, count: 0 } };
         return { response: { ready: true, count: (await loadConfiguration(auth.elevate(items.query))).length } };
       }
       default:

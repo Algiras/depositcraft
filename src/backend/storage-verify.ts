@@ -1,17 +1,24 @@
 import { auth } from '@wix/essentials';
-import { collections } from '@wix/data';
+import { items } from '@wix/data';
 import { emitBackendDiagnostic as emitDiagnostic } from '../shared/logger';
-import { assessStorageRequirements } from '../shared/storage-shape';
+import { assessStorageRequirements, createItemsQueryReader } from '../shared/storage-shape';
 import type { StorageReadinessAssessment } from '../shared/storage-readiness';
 
 /**
  * Elevated (app-identity) storage assessment for the same collections the
  * dashboard verifies with the merchant session. Runs in backend contexts:
  * install events, App Tools, health checks.
+ *
+ * ROOT CAUSE FIX: this used to probe with `collections.getDataCollection`,
+ * which requires `SCOPE.DC-DATA.DATA-COLLECTIONS-MANAGE` -- a scope
+ * DepositCraft (like every app in this portfolio) does not hold, so this
+ * 403'd permanently. It now probes with `items.query(...).limit(1).find(...)`,
+ * which only needs `SCOPE.DC-DATA.READ`. See
+ * `packages/core/src/storage/probe.ts` for the full incident writeup.
  */
 export async function assessStorageElevated(): Promise<StorageReadinessAssessment> {
   return assessStorageRequirements(
-    (id: string) => auth.elevate(collections.getDataCollection)(id, { consistentRead: true }),
+    createItemsQueryReader(auth.elevate(items.query)),
     'DepositCraft',
   );
 }
