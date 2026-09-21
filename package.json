@@ -36,6 +36,7 @@
     "release": "wix app release",
     "dev": "wix app dev",
     "preview": "wix app preview",
+    "logs": "wix app logs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run src",
     "test:browser:dashboard": "playwright test -c playwright.config.ts"
