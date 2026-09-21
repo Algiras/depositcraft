@@ -31,6 +31,26 @@ export function spiLineItems(lineItems: ReadonlyArray<unknown> | undefined): Che
   });
 }
 
+export function toCheckoutLineItems(order: {
+  lineItems?: Array<{
+    _id?: string;
+    catalogReference?: { catalogItemId?: string };
+    productName?: { original?: string | null; translated?: string | null } | null;
+    quantity?: number;
+    price?: { amount?: string };
+    originalPrice?: { amount?: string };
+  }>;
+}): CheckoutLineItem[] {
+  return (order.lineItems ?? []).map(item => ({
+    id: item._id,
+    catalogItemId: item.catalogReference?.catalogItemId,
+    catalogReference: item.catalogReference ? { catalogItemId: item.catalogReference.catalogItemId } : undefined,
+    productName: item.productName?.original ?? item.productName?.translated ?? undefined,
+    quantity: item.quantity ?? 1,
+    price: item.price?.amount ?? item.originalPrice?.amount ?? '0',
+  }));
+}
+
 export function deferredDiscountPercent(evaluation: DepositEvaluationResult): number {
   if (!evaluation.eligible || evaluation.orderSubtotal <= 0) return 0;
   return Math.round((evaluation.remainingBalance / evaluation.orderSubtotal) * 10000) / 100;

@@ -17,26 +17,7 @@ import { syncInstallmentAutomations } from './automation-reporter';
 import { createNextRequest } from './payment-request-lifecycle';
 import type { CheckoutLineItem, DepositRule } from '../types';
 import { emitBackendDiagnostic as emitDiagnostic } from '../shared/logger';
-
-function toCheckoutLineItems(order: {
-  lineItems?: Array<{
-    _id?: string;
-    catalogReference?: { catalogItemId?: string };
-    productName?: { original?: string };
-    quantity?: number;
-    price?: { amount?: string };
-    originalPrice?: { amount?: string };
-  }>;
-}): CheckoutLineItem[] {
-  return (order.lineItems ?? []).map(item => ({
-    id: item._id,
-    catalogItemId: item.catalogReference?.catalogItemId,
-    catalogReference: item.catalogReference ? { catalogItemId: item.catalogReference.catalogItemId } : undefined,
-    productName: item.productName?.original,
-    quantity: item.quantity ?? 1,
-    price: item.originalPrice?.amount ?? item.price?.amount ?? '0',
-  }));
-}
+import { toCheckoutLineItems } from '../shared/cart-evaluation';
 
 function matchesDepositCheckout(paidAmount: number, expectedDeposit: number): boolean {
   return Math.abs(paidAmount - expectedDeposit) <= 0.02;

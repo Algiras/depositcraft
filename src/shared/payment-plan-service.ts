@@ -18,6 +18,7 @@ import { installmentDueAt } from './installment-dates';
 import { CheckoutLineItem, DepositRule } from '../types';
 import { syncInstallmentAutomations, type AutomationReportOptions } from '../backend/automation-reporter';
 import { emitDiagnostic } from './logger';
+import { toCheckoutLineItems } from './cart-evaluation';
 
 type DiagnosticEmitter = typeof emitDiagnostic;
 
@@ -65,25 +66,6 @@ async function withOrderLock<T>(orderId: string, work: () => Promise<T>): Promis
     release();
     if (inFlightByOrder.get(orderId) === current) inFlightByOrder.delete(orderId);
   }
-}
-
-function toCheckoutLineItems(order: {
-  lineItems?: Array<{
-    _id?: string;
-    catalogReference?: { catalogItemId?: string };
-    productName?: { original?: string };
-    quantity?: number;
-    price?: { amount?: string };
-  }>;
-}): CheckoutLineItem[] {
-  return (order.lineItems ?? []).map(item => ({
-    id: item._id,
-    catalogItemId: item.catalogReference?.catalogItemId,
-    catalogReference: item.catalogReference ? { catalogItemId: item.catalogReference.catalogItemId } : undefined,
-    productName: item.productName?.original,
-    quantity: item.quantity ?? 1,
-    price: item.price?.amount ?? '0',
-  }));
 }
 
 async function loadSavedPlan(ruleId: string): Promise<DepositRule> {

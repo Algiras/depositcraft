@@ -5,7 +5,7 @@ vi.mock('@wix/app-management', () => ({ appInstances: api }));
 const elevateSpy = vi.hoisted(() => vi.fn((fn: unknown) => fn));
 vi.mock('@wix/essentials', () => ({ auth: { elevate: elevateSpy } }));
 
-import { checkoutDepositMessage, deferredDiscountPercent, eligibleDepositTriggers, evaluateCartDepositPlans } from './cart-evaluation';
+import { checkoutDepositMessage, deferredDiscountPercent, eligibleDepositTriggers, evaluateCartDepositPlans, toCheckoutLineItems } from './cart-evaluation';
 import type { DepositRule } from '../types';
 
 const rule: DepositRule = {
@@ -110,4 +110,56 @@ it('elevates the entitlement lookup when a backend/SPI caller opts in', async ()
   const query = fakeQuery();
   await evaluateCartDepositPlans([], 'USD', query as never, { elevated: true });
   expect(elevateSpy).toHaveBeenCalledWith(api.getAppInstance);
+});
+
+// ─── toCheckoutLineItems – discount price precedence ─────────────────────────
+// The layaway installment base must divide the effective selling price (price),
+// not the pre-discount catalogue price (originalPrice). A discounted order must
+// produce installments from the discounted total, not the sticker total.
+
+it('toCheckoutLineItems: prefers price over originalPrice (discounted item)', () => {
+  const result = toCheckoutLineItems({
+    lineItems: [
+      { _id: 'li-1', price: { amount: '75.00' }, originalPrice: { amount: '100.00' }, quantity: 1 },
+    ],
+  });
+  expect(result[0].price).toBe('75.00');
+});
+
+it('toCheckoutLineItems: falls back to originalPrice when price is absent', () => {
+  const result = toCheckoutLineItems({
+    lineItems: [
+      { _id: 'li-2', originalPrice: { amount: '100.00' }, quantity: 1 },
+    ],
+  });
+  expect(result[0].price).toBe('100.00');
+});
+
+it('toCheckoutLineItems: defaults price to "0" when both are absent', () => {
+  const result = toCheckoutLineItems({
+    lineItems: [{ _id: 'li-3', quantity: 1 }],
+  });
+  expect(result[0].price).toBe('0');
+});
+
+it('toCheckoutLineItems: maps catalogReference, productName, and quantity', () => {
+  const result = toCheckoutLineItems({
+    lineItems: [
+      {
+        _id: 'li-4',
+        catalogReference: { catalogItemId: 'cat-abc' },
+        productName: { original: 'Widget' },
+        price: { amount: '9.99' },
+        quantity: 3,
+      },
+    ],
+  });
+  expect(result[0]).toMatchObject({
+    id: 'li-4',
+    catalogItemId: 'cat-abc',
+    catalogReference: { catalogItemId: 'cat-abc' },
+    productName: 'Widget',
+    quantity: 3,
+    price: '9.99',
+  });
 });
