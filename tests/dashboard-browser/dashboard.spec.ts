@@ -48,9 +48,9 @@ test('no page-number pagination control exists anywhere in the UI', async ({ pag
   await expect(page.getByText(/page \d+ of \d+/i)).toHaveCount(0);
 });
 
-test('free plan displays Pro Tier card and header upgrade button', async ({ page }) => {
-  await expect(page.getByRole('button', { name: 'Upgrade to Pro' }).first()).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Upgrade to Pro' }).nth(1)).toBeVisible();
+test('free plan displays Pro Tier card upgrade button', async ({ page }) => {
+  await expect(page.getByRole('button', { name: 'Upgrade to Pro' })).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Upgrade to Pro' })).toBeVisible();
   await expect(page.getByText('Unlock unlimited deposit plans and custom schedules.')).toBeVisible();
 });
 
