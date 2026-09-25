@@ -82,9 +82,9 @@
     "URL: https://manage.wix.com/apps/cecd3584-c6bd-4895-a776-613643ef171d/automations-dev-center (NOT /automations).",
     "Automate: python3 scripts/register_wix_automation_trigger.py --app depositcraft --apply",
     "Skill: .agents/skills/wix-devcenter-automation-trigger/SKILL.md (workflow: workflows/28-wix-automation-trigger-registration.md).",
-    "Manual: Create Trigger → Generate from Sample Data → Convert to Schema → paste annotated payloadSchema → Process Schema.",
+    "Manual: Create Trigger \u2192 Generate from Sample Data \u2192 Convert to Schema \u2192 paste annotated payloadSchema \u2192 Process Schema.",
     "Then connect contactId (Contact ID) and dueAt (scheduled event) in the UI; Save & Close.",
-    "Merchants: Automations → DepositCraft → Installment due reminder → Send an email, timed to dueAt.",
+    "Merchants: Automations \u2192 DepositCraft \u2192 Installment due reminder \u2192 Send an email, timed to dueAt.",
     "DepositCraft reports/cancels events when installment ledgers change; customers pay manually via payment request links."
   ]
 }

@@ -1,24 +1,55 @@
-import { withIntlProvider } from '../../intl/withIntlProvider';
-import { FormattedMessage, useIntl, type IntlShape } from 'react-intl';
 import React, { useEffect, useRef, useState } from 'react';
+import { FormattedMessage, useIntl, type IntlShape } from 'react-intl';
 import { appInstances } from '@wix/app-management';
-import { WixDesignSystemProvider, Page, Card, Table, TableActionCell, Button, TextButton, Badge, ToggleSwitch, Input, NumberInput, FormField, Modal, CustomModalLayout, MessageModalLayout, Box, Heading, Text, Divider, EmptyState, SectionHelper, StatisticsWidget, RadioGroup, Dropdown, Loader, InfoIcon } from '@wix/design-system';
-import { Delete, Checklist } from '@wix/wix-ui-icons-common';
+import { orders } from '@wix/ecom';
+import {
+  Badge,
+  Box,
+  Button,
+  Card,
+  CustomModalLayout,
+  Divider,
+  Dropdown,
+  EmptyState,
+  FormField,
+  Heading,
+  InfoIcon,
+  Input,
+  Loader,
+  MessageModalLayout,
+  Modal,
+  NumberInput,
+  Page,
+  RadioGroup,
+  SectionHelper,
+  StatisticsWidget,
+  Table,
+  TableActionCell,
+  Text,
+  TextButton,
+  ToggleSwitch,
+  WixDesignSystemProvider,
+  listItemSelectBuilder,
+} from '@wix/design-system';
 import '@wix/design-system/styles.global.css';
-import { InstallationChecklist, StorageSetupNeeded, DashboardErrorBoundary, type ChecklistItem } from '@wix-extensions/core/ui';
+import { Checklist, Delete } from '@wix/wix-ui-icons-common';
+import { DashboardErrorBoundary, InstallationChecklist, StorageSetupNeeded, type ChecklistItem } from '@wix-extensions/core/ui';
 import { installGlobalErrorReporting } from '@wix-extensions/core/telemetry';
+import { fetchRecentCollectionLookups, type CollectionLookupItem } from '@wix-extensions/core/lookups';
+
+import { withIntlProvider } from '../../intl/withIntlProvider';
 import { loadConfiguration, saveConfiguration, assessConfigurationStorage } from '../../shared/configuration';
 import { confirmStorageWithAutoRetry, extractRequestId, storageDetailHint, type StorageSetupState, type StorageCheckItem } from '../../shared/storage-readiness';
 import { emitDiagnostic, markDashboardLoaded, markSetupFinished } from '../../shared/logger';
 import { showAppToast } from '../../shared/toast';
-import { getAppEntitlement, canUsePaidFeatures, getWixPricingPageUrl, AppEntitlement } from '../../shared/entitlement';
+import { getAppEntitlement, canUsePaidFeatures, getWixPricingPageUrl, type AppEntitlement } from '../../shared/entitlement';
 import { evaluateRuleAgainstPlan, canUseFixedDeposit, canUseCustomFrequency, FREE_PLAN_MAX_ACTIVE_RULES, FREE_PLAN_FIXED_FREQUENCY } from '../../shared/plan-limits';
-import { DepositRule, DepositType, DepositRuleScope, InstallmentFrequency } from '../../types';
 import { evaluateDepositPlan } from '../../shared/deposit-engine';
 import { resolveEcommerceInstalled, WIX_ECOMMERCE_APP_MARKET_URL, type EcommerceInstallState } from '../../shared/ecommerce';
 import { deferredDiscountPercent } from '../../shared/cart-evaluation';
 import { depositTriggerName } from '../../shared/deposit-trigger-id';
 import { processDueInstallments, listPaymentLedgerPage } from '../../shared/installment-billing';
+import type { DepositRule, DepositType, DepositRuleScope, InstallmentFrequency } from '../../types';
 import type { PaymentLedger } from '../../shared/payment-ledger';
 const APP_ID = 'cecd3584-c6bd-4895-a776-613643ef171d';
 const CURRENCY = 'USD';
@@ -273,6 +304,17 @@ function DepositCraftDashboard() {
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetchRecentCollectionLookups(orders).then(items => {
+      if (active && items.length > 0) {
+        setAvailableCollections(items);
+      }
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
   const isPaidPlan = canUsePaidFeatures(entitlement);
   const upgradeUrl = instanceId ? getWixPricingPageUrl(APP_ID, instanceId) : undefined;
   const saveChanges = async () => {
@@ -313,6 +355,8 @@ function DepositCraftDashboard() {
   const [newMinSubtotal, setNewMinSubtotal] = useState('250');
   const [newScope, setNewScope] = useState<DepositRuleScope>('ALL_PRODUCTS');
   const [newTargetCollections, setNewTargetCollections] = useState('');
+  const [availableCollections, setAvailableCollections] = useState<CollectionLookupItem[]>([]);
+  const [isManualCollection, setIsManualCollection] = useState(false);
   const [modalGateMessage, setModalGateMessage] = useState('');
 
   // Simulator state
@@ -376,6 +420,7 @@ function DepositCraftDashboard() {
     setNewScope('ALL_PRODUCTS');
     setNewTargetCollections('');
     setModalGateMessage('');
+    setIsManualCollection(false);
   };
   const handleAddRule = () => {
     if (!newRuleName.trim()) return;
@@ -1181,15 +1226,69 @@ function DepositCraftDashboard() {
               }]} />
               </FormField>
 
-              {newScope === 'COLLECTION' && <FormField label={intl.formatMessage({ id: 'app.modal.collectionIdsLabel', defaultMessage: 'Collection IDs (comma-separated)' })} infoContent={intl.formatMessage({
-              id: 'app.modal.collectionIdsInfo',
-              defaultMessage: 'Find collection IDs in Wix Stores > Collections.'
-            })}>
-                  <Input placeholder={intl.formatMessage({
-                id: 'app.modal.collectionIdsPlaceholder',
-                defaultMessage: 'e.g., custom-sofas, luxury-beds'
-              })} value={newTargetCollections} onChange={e => setNewTargetCollections(e.target.value)} />
-                </FormField>}
+              {newScope === 'COLLECTION' && (
+                <FormField
+                  label={intl.formatMessage({ id: 'app.modal.collectionIdsLabel', defaultMessage: 'Target Store Collection' })}
+                  infoContent={intl.formatMessage({
+                    id: 'app.modal.collectionIdsInfo',
+                    defaultMessage: 'Apply deposit terms when products from this collection are in cart.'
+                  })}
+                >
+                  {availableCollections.length > 0 && !isManualCollection ? (
+                    <Box direction="vertical" gap="4px">
+                      <Dropdown
+                        placeholder={intl.formatMessage({ id: 'app.modal.collectionSelectPlaceholder', defaultMessage: 'Select a collection from store catalog…' })}
+                        options={availableCollections.map(c => listItemSelectBuilder({
+                          id: c.id || c.slug || '',
+                          title: c.name,
+                          subtitle: c.slug ? `/collections/${c.slug}` : undefined,
+                          suffix: c.numberOfProducts !== undefined ? <Text size="tiny" secondary>{`${c.numberOfProducts} items`}</Text> : undefined,
+                        }))}
+                        selectedId={availableCollections.find(c => c.id === newTargetCollections || (c.slug && c.slug === newTargetCollections))?.id || newTargetCollections || undefined}
+                        onSelect={opt => {
+                          if (opt?.id) setNewTargetCollections(String(opt.id));
+                        }}
+                        valueParser={(opt: any) => opt?.title ? `${opt.title}${opt.subtitle ? ` (${opt.subtitle})` : ''}` : opt?.label || ''}
+                        clearButton
+                        onClear={() => setNewTargetCollections('')}
+                      />
+                      <Box>
+                        <TextButton
+                          size="tiny"
+                          priority="secondary"
+                          onClick={() => setIsManualCollection(true)}
+                        >
+                          <FormattedMessage id="app.modal.enterCollectionManually" defaultMessage="Enter collection ID or slug manually" />
+                        </TextButton>
+                      </Box>
+                    </Box>
+                  ) : (
+                    <Box direction="vertical" gap="4px">
+                      <Input
+                        placeholder={intl.formatMessage({
+                          id: 'app.modal.collectionIdsPlaceholder',
+                          defaultMessage: 'e.g., custom-sofas, luxury-beds'
+                        })}
+                        value={newTargetCollections}
+                        onChange={e => setNewTargetCollections(e.target.value)}
+                        clearButton
+                        onClear={() => setNewTargetCollections('')}
+                      />
+                      {availableCollections.length > 0 && (
+                        <Box>
+                          <TextButton
+                            size="tiny"
+                            priority="secondary"
+                            onClick={() => setIsManualCollection(false)}
+                          >
+                            <FormattedMessage id="app.modal.chooseCollectionFromList" defaultMessage="← Choose from store collections" />
+                          </TextButton>
+                        </Box>
+                      )}
+                    </Box>
+                  )}
+                </FormField>
+              )}
             </Box>
           </CustomModalLayout>
         </Modal>
@@ -1287,3 +1386,4 @@ function DepositCraftPage() {
     </WixDesignSystemProvider>;
 }
 export default withIntlProvider(DepositCraftPage);
+
